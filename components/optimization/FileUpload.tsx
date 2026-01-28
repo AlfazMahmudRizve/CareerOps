@@ -3,10 +3,10 @@ import { useState, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
-    onFileParsed: (text: string) => void;
+    onFileSelect: (file: File) => void;
 }
 
-export function FileUpload({ onFileParsed }: FileUploadProps) {
+export function FileUpload({ onFileSelect }: FileUploadProps) {
     const [isDragOver, setIsDragOver] = useState(false);
     const [fileStatus, setFileStatus] = useState<'idle' | 'parsing' | 'success'>('idle');
     const [fileName, setFileName] = useState<string | null>(null);
@@ -24,13 +24,8 @@ export function FileUpload({ onFileParsed }: FileUploadProps) {
 
     const processFile = (file: File) => {
         setFileName(file.name);
-        setFileStatus('parsing');
-
-        // Simulate parsing
-        setTimeout(() => {
-            setFileStatus('success');
-            onFileParsed('Dummy resume text parsed from ' + file.name);
-        }, 800);
+        setFileStatus('success');
+        onFileSelect(file);
     };
 
     const handleDrop = useCallback(
@@ -42,7 +37,7 @@ export function FileUpload({ onFileParsed }: FileUploadProps) {
                 processFile(e.dataTransfer.files[0]);
             }
         },
-        [onFileParsed]
+        [onFileSelect]
     );
 
     const handleClick = () => {

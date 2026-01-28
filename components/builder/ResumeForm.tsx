@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { Plus, Trash2, Upload, Loader2, FileText, ChevronDown, ChevronUp, GraduationCap, Briefcase, Award, Code } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { extractTextFromPDF } from '@/app/actions';
+
 
 export type ResumeData = {
     fullName: string;
@@ -106,69 +106,56 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
     // For now, let's implement the 'Import' logic.
 
     const handleSmartImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log("handleSmartImport triggered");
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file) {
+            console.log("No file selected");
+            return;
+        }
+        console.log("File selected:", file.name, file.size);
 
         setIsImporting(true);
         try {
-            // Task 1: Extract Text via Server Action
+            // Task 1: Extract Text via API
             const formData = new FormData();
             formData.append('file', file);
 
-            const extractionResult = await extractTextFromPDF(formData);
-            if (extractionResult.success) {
-                console.log("PDF Text Extracted:", extractionResult.text?.slice(0, 100) + "...");
-            } else {
-                console.error("PDF Extraction Failed:", extractionResult.error);
-            }
+            const parseResponse = await fetch('/api/parse-pdf', {
+                method: 'POST',
+                body: formData,
+            });
 
-            // Simulation of "Task 3: Mock the Response"
-            await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+            if (!parseResponse.ok) throw new Error('Failed to parse PDF');
 
-            const mockData: ResumeData = {
-                fullName: "Alex Rivera",
-                email: "alex.rivera@example.com",
-                phone: "+1 (555) 012-3456",
-                linkedin: "linkedin.com/in/arivera",
-                portfolio: "alexrivera.dev",
-                summary: "Creative Frontend Developer with 4+ years of experience building responsive web applications. Specialized in React, TypeScript, and modern UI libraries. Passionate about user experience and accessible design.",
-                experience: [
-                    {
-                        company: "TechFlow Solutions",
-                        role: "Senior Frontend Engineer",
-                        startDate: "2022-03",
-                        endDate: "Present",
-                        description: "Led the migration of a legacy dashboard to Next.js, improving load times by 40%. Mentored junior developers and established code quality standards."
-                    },
-                    {
-                        company: "Creative Pulse Agency",
-                        role: "Web Developer",
-                        startDate: "2020-06",
-                        endDate: "2022-02",
-                        description: "Developed custom marketing sites for high-profile clients using React and headless CMS solutions. Collaborated closely with designers to implement pixel-perfect UIs."
-                    }
-                ],
-                education: [
-                    { school: "University of Technology", degree: "B.S. Computer Science", startDate: "2016", endDate: "2020", description: "Graduated with Honors. Capstone project on AI accessibility." }
-                ],
-                projects: [
-                    { title: "E-Commerce Dashboard", techStack: "Next.js, Tailwind, Stripe", link: "github.com/alex/dashboard", description: "Built a comprehensive admin dashboard with real-time sales reporting." }
-                ],
-                certifications: [
-                    { name: "AWS Certified Developer", issuer: "Amazon Web Services", date: "2023" }
-                ],
-                skills: "React, TypeScript, Next.js, Tailwind CSS, Node.js, GraphQL, PostgreSQL, Git, CI/CD"
-            };
+            const parseData = await parseResponse.json();
+            const pdfText = parseData.text;
 
-            // reset form with mock data
-            reset(mockData);
+            console.log("PDF Text Extracted:", pdfText?.slice(0, 100) + "...");
+
+            // Task 2: Structure Data via n8n Proxy
+            const structureResponse = await fetch('/api/structure', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resumeText: pdfText }),
+            });
+
+            if (!structureResponse.ok) throw new Error('Failed to structure resume data');
+
+            const structuredData = await structureResponse.json();
+            console.log("Structured Data:", structuredData);
+
+            // Ensure the data matches our schema (basic validation/fallback could be added here)
+            // For now, we assume n8n returns the exact shape of ResumeData
+
+            // reset form with structured data
+            reset(structuredData);
 
             // Trigger parent update
-            onChange(mockData);
+            onChange(structuredData);
 
         } catch (error) {
-            console.error(error);
-            alert('Failed to import resume. Please try again.');
+            console.error("Import Error:", error);
+            alert(`Failed to import resume. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setIsImporting(false);
             // Reset the input so the same file can be selected again if needed

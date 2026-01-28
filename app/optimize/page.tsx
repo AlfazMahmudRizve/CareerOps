@@ -8,17 +8,68 @@ import { cn } from '@/lib/utils';
 import { Sparkles } from 'lucide-react';
 
 export default function OptimizePage() {
-    const [resumeText, setResumeText] = useState<string | null>(null);
+    const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [jdText, setJdText] = useState('');
     const { isLoading, result, runOptimization } = useOptimization();
 
-    const handleRun = () => {
-        if (resumeText && jdText) {
-            runOptimization(resumeText, jdText);
+    const handleRun = async () => {
+        if (!resumeFile || !jdText) return;
+
+        // Stage 1: Extraction
+        try {
+            const formData = new FormData();
+            formData.append('file', resumeFile);
+
+            // We need to handle loading state manually here or extend the hook
+            // For simplicity, let's assume runOptimization handles the loading UI for the WHOLE process if we pass it the file?
+            // The prompt says: "Refactor handleAnalyze... Stage 1... Stage 2..."
+            // But runOptimization hook currently does the Fetch to /api/analyze.
+            // I should probably modify runOptimization to accept TEXT, and do extraction HERE.
+
+            // Let's modify the loading state management to wrap this whole process.
+            // Actually, I can't access setIsLoading from the hook if it doesn't export it.
+            // Oh, the hook exports isLoading. But I can't SET it.
+            // I will implement the logic inside this component for the parser, then call runOptimization with text.
+            // But runOptimization sets loading.
+
+            // Wait, to show loading during parsing, I need local state or modifying the hook.
+            // Let's modify the hook later if needed, but for now:
+
+            const parseResponse = await fetch('/api/parse-pdf', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!parseResponse.ok) {
+                const contentType = parseResponse.headers.get("content-type");
+                let errorMessage = 'Unknown server error';
+
+                if (contentType && contentType.includes("application/json")) {
+                    const errorData = await parseResponse.json();
+                    errorMessage = errorData.error;
+                } else {
+                    errorMessage = `Server returned ${parseResponse.status} ${parseResponse.statusText}`;
+                    const text = await parseResponse.text();
+                    console.error('Server Error Text:', text);
+                }
+
+                alert(`Failed to parse PDF: ${errorMessage}`);
+                return;
+            }
+
+            const parseData = await parseResponse.json();
+            const resumeText = parseData.text;
+
+            // Stage 2: Analysis
+            await runOptimization(resumeText, jdText);
+
+        } catch (error) {
+            console.error(error);
+            alert(`Error processing file: ${error instanceof Error ? error.message : String(error)}`);
         }
     };
 
-    const isReady = !!resumeText && !!jdText && !isLoading;
+    const isReady = !!resumeFile && !!jdText && !isLoading;
 
     return (
         <div className="container min-h-screen py-10 px-4 md:px-6">
@@ -34,7 +85,7 @@ export default function OptimizePage() {
                         <h2 className="text-xl font-semibold flex items-center gap-2">
                             1. Upload Resume
                         </h2>
-                        <FileUpload onFileParsed={setResumeText} />
+                        <FileUpload onFileSelect={setResumeFile} />
                     </section>
 
                     <section className="space-y-4">

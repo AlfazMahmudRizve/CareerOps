@@ -70,7 +70,7 @@ Driven software engineer with a focus on Frontend technologies.
 
 SKILLS
 Found: Frontend Skills, React, Next.js, Tailwind CSS
-Missing: ${result.missingKeywords.join(', ')}
+Missing: ${(result.missingKeywords || []).join(', ') || 'None'}
 
 MATCH SCORE: ${result.score}%
 FEEDBACK: ${result.feedback}
@@ -149,7 +149,7 @@ FEEDBACK: ${result.feedback}
                     <div className="rounded-xl border border-white/10 bg-white/5 p-6 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <h3 className="mb-4 text-lg font-bold">Detailed Skill Analysis</h3>
                         <div className="space-y-3">
-                            {result.missingKeywords.map((keyword) => (
+                            {(result.missingKeywords || []).map((keyword) => (
                                 <div key={keyword} className="flex items-center space-x-3 rounded-lg border border-white/5 bg-background/50 p-3">
                                     <XCircle className="h-5 w-5 text-red-500" />
                                     <span className="flex-1 font-medium">{keyword}</span>

@@ -14,17 +14,38 @@ export function useOptimization() {
         setIsLoading(true);
         setResult(null);
 
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ resumeText, jdText }),
+            });
 
-        // Mock response
-        setResult({
-            score: 72,
-            missingKeywords: ['Docker', 'GraphQL', 'System Design'],
-            feedback:
-                'Your resume is strong on Frontend but lacks the Backend infrastructure keywords requested in the JD.',
-        });
-        setIsLoading(false);
+            if (!response.ok) {
+                throw new Error('Failed to analyze resume');
+            }
+
+            const data = await response.json();
+            // Ensure defaults if API returns partial data
+            setResult({
+                score: data.score || 0,
+                missingKeywords: data.missingKeywords || [],
+                feedback: data.feedback || 'Analysis complete.',
+                ...data
+            });
+        } catch (error) {
+            console.error('Optimization Error:', error);
+            // Optional: Set an error state or default error result
+            setResult({
+                score: 0,
+                missingKeywords: [],
+                feedback: 'Failed to analyze resume. Please try again.',
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return {
