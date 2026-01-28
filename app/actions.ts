@@ -1,6 +1,6 @@
 'use server';
+/* eslint-disable */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const pdf = require('pdf-parse');
 
 export async function extractTextFromPDF(formData: FormData) {

@@ -48,7 +48,7 @@ interface ResumeFormProps {
 
 export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
     const [isImporting, setIsImporting] = useState(false);
-    const { register, control, watch, reset, setValue } = useForm<ResumeData>({
+    const { register, control, watch, reset } = useForm<ResumeData>({
         defaultValues,
     });
 
