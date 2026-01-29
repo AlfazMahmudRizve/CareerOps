@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { FileUpload } from '@/components/optimization/FileUpload';
-import { ResultsDashboard } from '@/components/optimization/ResultsDashboard';
+import ResultsDashboard from '@/components/optimization/ResultsDashboard';
 import { useOptimization } from '@/hooks/useOptimization';
 import { cn } from '@/lib/utils';
 import { Sparkles } from 'lucide-react';
@@ -125,7 +125,15 @@ export default function OptimizePage() {
                     <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
                         Analysis Results
                     </h2>
-                    <ResultsDashboard isLoading={isLoading} result={result} />
+
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center p-12 space-y-4">
+                            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                            <p className="text-muted-foreground animate-pulse">Analyzing your resume...</p>
+                        </div>
+                    ) : (
+                        <ResultsDashboard data={result} />
+                    )}
                 </div>
             </div>
         </div>

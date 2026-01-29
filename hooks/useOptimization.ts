@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
 export type OptimizationResult = {
-    score: number;
+    matchScore: number;
+    score?: number; // Legacy support
     missingKeywords: string[];
     feedback: string;
+    fix?: string;
 };
 
 export function useOptimization() {
@@ -30,18 +32,20 @@ export function useOptimization() {
             const data = await response.json();
             // Ensure defaults if API returns partial data
             setResult({
-                score: data.score || 0,
+                matchScore: data.matchScore || data.score || 0,
                 missingKeywords: data.missingKeywords || [],
                 feedback: data.feedback || 'Analysis complete.',
+                fix: data.fix || '',
                 ...data
             });
         } catch (error) {
             console.error('Optimization Error:', error);
             // Optional: Set an error state or default error result
             setResult({
-                score: 0,
+                matchScore: 0,
                 missingKeywords: [],
                 feedback: 'Failed to analyze resume. Please try again.',
+                fix: ''
             });
         } finally {
             setIsLoading(false);

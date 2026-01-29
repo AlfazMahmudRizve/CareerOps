@@ -106,13 +106,8 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
     // For now, let's implement the 'Import' logic.
 
     const handleSmartImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        console.log("handleSmartImport triggered");
         const file = e.target.files?.[0];
-        if (!file) {
-            console.log("No file selected");
-            return;
-        }
-        console.log("File selected:", file.name, file.size);
+        if (!file) return;
 
         setIsImporting(true);
         try {
@@ -130,8 +125,6 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
             const parseData = await parseResponse.json();
             const pdfText = parseData.text;
 
-            console.log("PDF Text Extracted:", pdfText?.slice(0, 100) + "...");
-
             // Task 2: Structure Data via n8n Proxy
             const structureResponse = await fetch('/api/structure', {
                 method: 'POST',
@@ -141,24 +134,62 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
 
             if (!structureResponse.ok) throw new Error('Failed to structure resume data');
 
-            const structuredData = await structureResponse.json();
-            console.log("Structured Data:", structuredData);
+            const n8nData = await structureResponse.json();
+            console.log("Structured Data:", n8nData);
 
-            // Ensure the data matches our schema (basic validation/fallback could be added here)
-            // For now, we assume n8n returns the exact shape of ResumeData
+            // Task 3: Map Data to Form Schema
+            // Safety: Use optional chaining and defaults
+            const mappedData: ResumeData = {
+                fullName: n8nData.personal?.fullName || n8nData.fullName || '',
+                email: n8nData.personal?.email || n8nData.email || '',
+                phone: n8nData.personal?.phone || n8nData.phone || '',
+                linkedin: n8nData.personal?.linkedin || n8nData.linkedin || '',
+                portfolio: n8nData.personal?.portfolio || n8nData.portfolio || '',
+                summary: n8nData.personal?.summary || n8nData.summary || '',
 
-            // reset form with structured data
-            reset(structuredData);
+                experience: Array.isArray(n8nData.experience) ? n8nData.experience.map((exp: any) => ({
+                    company: exp.company || '',
+                    role: exp.role || '',
+                    startDate: exp.startDate || '',
+                    endDate: exp.endDate || '',
+                    description: exp.description || ''
+                })) : [],
 
-            // Trigger parent update
-            onChange(structuredData);
+                education: Array.isArray(n8nData.education) ? n8nData.education.map((edu: any) => ({
+                    school: edu.school || '',
+                    degree: edu.degree || '',
+                    startDate: edu.startDate || '',
+                    endDate: edu.endDate || '',
+                    description: edu.description || ''
+                })) : [],
+
+                projects: Array.isArray(n8nData.projects) ? n8nData.projects.map((proj: any) => ({
+                    title: proj.title || '',
+                    techStack: proj.techStack || '',
+                    link: proj.link || '',
+                    description: proj.description || ''
+                })) : [],
+
+                certifications: Array.isArray(n8nData.certifications) ? n8nData.certifications.map((cert: any) => ({
+                    name: cert.name || '',
+                    issuer: cert.issuer || '',
+                    date: cert.date || ''
+                })) : [],
+
+                skills: n8nData.skills || ''
+            };
+
+            // Reset form with mapped data
+            reset(mappedData);
+            onChange(mappedData);
+
+            // alert('Import Complete!'); // Optional: Replace with toast if available
 
         } catch (error) {
             console.error("Import Error:", error);
             alert(`Failed to import resume. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setIsImporting(false);
-            // Reset the input so the same file can be selected again if needed
             e.target.value = '';
         }
     };

@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
         }
 
         // const n8nUrl = process.env.N8N_ANALYZE_URL;
-        const n8nUrl = "https://v3-n8n.veemi.site/webhook-test/careerops";
+        const n8nUrl = "https://v3-n8n.veemi.site/webhook/careerops";
 
         const response = await fetch(n8nUrl, {
             method: 'POST',

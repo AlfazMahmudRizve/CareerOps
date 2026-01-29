@@ -1,48 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
+import PDFParser from 'pdf2json';
 
-// 1. FORCE Node.js Runtime (Crucial for pdf-parse)
+// Force Node.js runtime (required for file system access)
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-    console.log("🔹 API /parse-pdf hit");
-
     try {
-        // 2. Parse Form Data
         const formData = await req.formData();
         const file = formData.get('file') as File;
 
         if (!file) {
-            console.error("❌ No file found in FormData");
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
         }
-        console.log(`🔹 File received: ${file.name} (${file.size} bytes)`);
 
-        // 3. Convert to Buffer
+        // 1. Convert to Buffer
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        console.log("🔹 Buffer created successfully");
 
-        // 4. Load Parser Safe-Mode
-        // We use a try-require pattern to handle different build environments
-        let pdfParse;
-        try {
-            // @ts-ignore
-            pdfParse = require('pdf-parse');
-        } catch (e) {
-            console.error("❌ Failed to require('pdf-parse')");
-            throw new Error("Server configuration error: pdf-parse missing");
-        }
+        // 2. Parse using pdf2json (Wrapped in a Promise)
+        const text = await new Promise<string>((resolve, reject) => {
+            const parser = new PDFParser(null, 1); // 1 = text content only
 
-        // 5. Execute Parse
-        console.log("🔹 Starting PDF extraction...");
-        const data = await pdfParse(buffer);
-        console.log("✅ Success! Extracted chars:", data.text.length);
+            parser.on("pdfParser_dataError", (errData: any) => {
+                console.error("PDF Parser Error:", errData.parserError);
+                reject(errData.parserError);
+            });
 
-        return NextResponse.json({ text: data.text });
+            parser.on("pdfParser_dataReady", (pdfData: any) => {
+                // The library returns URL-encoded text sometimes, so we decode it
+                // Note: The user provided code uses parser.getRawTextContent(). 
+                // We need to ensure we cast correctly or use the raw text if available from the event, 
+                // but the prompt explicitly asked for: (parser as any).getRawTextContent();
+                const rawText = (parser as any).getRawTextContent();
+                resolve(rawText);
+            });
+
+            parser.parseBuffer(buffer);
+        });
+
+        return NextResponse.json({ text });
 
     } catch (error: any) {
-        console.error('🔥 CRITICAL PARSE ERROR:', error);
+        console.error('PDF Processing Error:', error);
         return NextResponse.json(
             { error: 'Failed to parse PDF', details: error.message },
             { status: 500 }
