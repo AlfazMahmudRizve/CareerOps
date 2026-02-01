@@ -4,6 +4,7 @@ import { PDFViewer, Document, Page, Text, View, StyleSheet } from '@react-pdf/re
 import { type ResumeData } from './ResumeForm';
 import { useState, useEffect } from 'react';
 import { Eye, Info } from 'lucide-react';
+import { ExecutiveTemplate } from '../pdf/ExecutiveTemplate';
 
 // Create styles
 const styles = StyleSheet.create({
@@ -334,7 +335,7 @@ Date: ${cert.date}
                 ) : (
                     // PDF Mode
                     <PDFViewer className="h-full w-full border-none">
-                        <ResumePDF data={data} />
+                        <ExecutiveTemplate data={data} />
                     </PDFViewer>
                 )}
             </div>
