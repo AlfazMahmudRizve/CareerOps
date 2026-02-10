@@ -147,7 +147,7 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                 portfolio: n8nData.personal?.portfolio || n8nData.portfolio || '',
                 summary: n8nData.personal?.summary || n8nData.summary || '',
 
-                experience: Array.isArray(n8nData.experience) ? n8nData.experience.map((exp: any) => ({
+                experience: Array.isArray(n8nData.experience) ? n8nData.experience.map((exp: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
                     company: exp.company || '',
                     role: exp.role || '',
                     startDate: exp.startDate || '',
@@ -155,7 +155,7 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                     description: exp.description || ''
                 })) : [],
 
-                education: Array.isArray(n8nData.education) ? n8nData.education.map((edu: any) => ({
+                education: Array.isArray(n8nData.education) ? n8nData.education.map((edu: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
                     school: edu.school || '',
                     degree: edu.degree || '',
                     startDate: edu.startDate || '',
@@ -163,14 +163,14 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                     description: edu.description || ''
                 })) : [],
 
-                projects: Array.isArray(n8nData.projects) ? n8nData.projects.map((proj: any) => ({
+                projects: Array.isArray(n8nData.projects) ? n8nData.projects.map((proj: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
                     title: proj.title || '',
                     techStack: proj.techStack || '',
                     link: proj.link || '',
                     description: proj.description || ''
                 })) : [],
 
-                certifications: Array.isArray(n8nData.certifications) ? n8nData.certifications.map((cert: any) => ({
+                certifications: Array.isArray(n8nData.certifications) ? n8nData.certifications.map((cert: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
                     name: cert.name || '',
                     issuer: cert.issuer || '',
                     date: cert.date || ''

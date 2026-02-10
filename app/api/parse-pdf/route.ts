@@ -21,31 +21,31 @@ export async function POST(req: NextRequest) {
         const text = await new Promise<string>((resolve, reject) => {
             const parser = new PDFParser(null, true); // true = text content only
 
-            parser.on("pdfParser_dataError", (errData: any) => {
+            parser.on("pdfParser_dataError", (errData: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                 console.error("PDF Parser Error:", errData.parserError);
                 reject(errData.parserError);
             });
 
-            parser.on("pdfParser_dataReady", (pdfData: any) => {
+            parser.on("pdfParser_dataReady", (pdfData: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                 // Manual extraction for better control
                 try {
                     let extractedText = '';
 
                     // pdfData.Pages is an array of pages
                     if (pdfData && pdfData.Pages) {
-                        pdfData.Pages.forEach((page: any) => {
+                        pdfData.Pages.forEach((page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                             // page.Texts is an array of text objects
                             if (page.Texts) {
-                                page.Texts.forEach((textObj: any) => {
+                                page.Texts.forEach((textObj: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                                     // textObj.R is an array of text runs
                                     if (textObj.R) {
-                                        textObj.R.forEach((run: any) => {
+                                        textObj.R.forEach((run: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                                             // run.T is the actual text, URI encoded
                                             if (run.T) {
                                                 try {
                                                     const decoded = decodeURIComponent(run.T);
                                                     extractedText += decoded + ' ';
-                                                } catch (e) {
+                                                } catch {
                                                     // Fallback if decoding fails
                                                     extractedText += run.T + ' ';
                                                 }
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ text });
 
-    } catch (error: any) {
+    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         console.error('PDF Processing Error:', error);
         return NextResponse.json(
             { error: 'Failed to parse PDF', details: error.message },

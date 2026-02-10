@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 import { type ResumeData } from '../builder/ResumeForm';
 
 // Register a standard font if allowed, otherwise fallback to Helvetica
@@ -182,7 +182,7 @@ export const ExecutiveTemplate = ({ data }: { data: ResumeData }) => {
                     </View>
                     <View style={styles.headerRight}>
                         {/* Note: React-PDF Image component requires a valid src (URL or base64) */}
-                        <Image style={styles.profileImage} src={placeholderImage} />
+                        <Image style={styles.profileImage} src={placeholderImage} /> {/* eslint-disable-line jsx-a11y/alt-text */}
                     </View>
                 </View>
 

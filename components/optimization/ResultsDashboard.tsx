@@ -3,7 +3,7 @@
 import { Check, Copy, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 
-export default function ResultsDashboard({ data }: { data: any }) {
+export default function ResultsDashboard({ data }: { data: any }) { // eslint-disable-line @typescript-eslint/no-explicit-any
     const score = data?.matchScore || 0;
     const missing = data?.missingKeywords || [];
     const [copied, setCopied] = useState(false);

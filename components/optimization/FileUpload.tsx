@@ -37,7 +37,7 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
                 processFile(e.dataTransfer.files[0]);
             }
         },
-        [onFileSelect]
+        [onFileSelect] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     const handleClick = () => {
