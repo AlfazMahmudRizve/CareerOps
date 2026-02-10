@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
         // 2. Parse using pdf2json (Wrapped in a Promise)
         const text = await new Promise<string>((resolve, reject) => {
-            const parser = new PDFParser(null, 1); // 1 = text content only
+            const parser = new PDFParser(null, true); // true = text content only
 
             parser.on("pdfParser_dataError", (errData: any) => {
                 console.error("PDF Parser Error:", errData.parserError);
@@ -27,12 +27,42 @@ export async function POST(req: NextRequest) {
             });
 
             parser.on("pdfParser_dataReady", (pdfData: any) => {
-                // The library returns URL-encoded text sometimes, so we decode it
-                // Note: The user provided code uses parser.getRawTextContent(). 
-                // We need to ensure we cast correctly or use the raw text if available from the event, 
-                // but the prompt explicitly asked for: (parser as any).getRawTextContent();
-                const rawText = (parser as any).getRawTextContent();
-                resolve(rawText);
+                // Manual extraction for better control
+                try {
+                    let extractedText = '';
+
+                    // pdfData.Pages is an array of pages
+                    if (pdfData && pdfData.Pages) {
+                        pdfData.Pages.forEach((page: any) => {
+                            // page.Texts is an array of text objects
+                            if (page.Texts) {
+                                page.Texts.forEach((textObj: any) => {
+                                    // textObj.R is an array of text runs
+                                    if (textObj.R) {
+                                        textObj.R.forEach((run: any) => {
+                                            // run.T is the actual text, URI encoded
+                                            if (run.T) {
+                                                try {
+                                                    const decoded = decodeURIComponent(run.T);
+                                                    extractedText += decoded + ' ';
+                                                } catch (e) {
+                                                    // Fallback if decoding fails
+                                                    extractedText += run.T + ' ';
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                            // Add a newline after each page
+                            extractedText += '\n';
+                        });
+                    }
+
+                    resolve(extractedText.trim());
+                } catch (err) {
+                    reject(err);
+                }
             });
 
             parser.parseBuffer(buffer);
