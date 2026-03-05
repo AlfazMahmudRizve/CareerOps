@@ -21,21 +21,41 @@ export async function POST(req: NextRequest) {
         const text = await new Promise<string>((resolve, reject) => {
             const parser = new PDFParser(null, true); // true = text content only
 
-            parser.on("pdfParser_dataError", (errData: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                console.error("PDF Parser Error:", errData.parserError);
-                reject(errData.parserError);
+            interface PDFRun {
+                T: string;
+            }
+
+            interface PDFText {
+                x: number;
+                y: number;
+                w: number;
+                R: PDFRun[];
+            }
+
+            interface PDFPage {
+                Texts: PDFText[];
+            }
+
+            interface PDFData {
+                Pages: PDFPage[];
+            }
+
+            parser.on("pdfParser_dataError", (errData: { parserError: any } | Error) => {
+                const error = 'parserError' in errData ? errData.parserError : errData;
+                console.error("PDF Parser Error:", error);
+                reject(error);
             });
 
-            parser.on("pdfParser_dataReady", (pdfData: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+            parser.on("pdfParser_dataReady", (pdfData: PDFData) => {
                 try {
                     let extractedText = '';
 
                     if (pdfData && pdfData.Pages) {
-                        pdfData.Pages.forEach((page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                        pdfData.Pages.forEach((page: PDFPage) => {
                             if (page.Texts) {
                                 // Sort text items by Y position first, then X position
                                 // This preserves the visual layout of the PDF
-                                const sortedTexts = [...page.Texts].sort((a: any, b: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                                const sortedTexts = [...page.Texts].sort((a: PDFText, b: PDFText) => {
                                     const yDiff = (a.y || 0) - (b.y || 0);
                                     if (Math.abs(yDiff) > 0.3) return yDiff; // Different line (threshold)
                                     return (a.x || 0) - (b.x || 0); // Same line, sort by X
@@ -45,7 +65,7 @@ export async function POST(req: NextRequest) {
                                 let lastX = -1;
                                 let lastWidth = 0;
 
-                                sortedTexts.forEach((textObj: any) => {
+                                sortedTexts.forEach((textObj: PDFText) => {
                                     if (textObj.R) {
                                         const currentY = textObj.y || 0;
                                         const currentX = textObj.x || 0;
@@ -71,7 +91,7 @@ export async function POST(req: NextRequest) {
                                         lastX = currentX;
                                         lastWidth = textObj.w || 0;
 
-                                        textObj.R.forEach((run: any) => {
+                                        textObj.R.forEach((run: PDFRun) => {
                                             if (run.T) {
                                                 try {
                                                     const decoded = decodeURIComponent(run.T);
@@ -106,10 +126,11 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ text });
 
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error('PDF Processing Error:', error);
         return NextResponse.json(
-            { error: 'Failed to parse PDF', details: error.message },
+            { error: 'Failed to parse PDF', details: errorMessage },
             { status: 500 }
         );
     }
