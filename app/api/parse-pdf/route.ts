@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
                 Pages: PDFPage[];
             }
 
-            parser.on("pdfParser_dataError", (errData: { parserError: any } | Error) => {
+            parser.on("pdfParser_dataError", (errData: { parserError: unknown } | Error) => {
                 const error = 'parserError' in errData ? errData.parserError : errData;
                 console.error("PDF Parser Error:", error);
                 reject(error);
