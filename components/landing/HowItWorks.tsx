@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Upload, FileSearch, Sparkles, FileCheck } from 'lucide-react';
 
 const steps = [
@@ -26,27 +25,6 @@ const steps = [
     },
 ];
 
-const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.2,
-        },
-    },
-};
-
-const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.5,
-        },
-    },
-};
-
 export function HowItWorks() {
     return (
         <section className="container py-24 md:py-32 px-4 md:px-6 border-t border-border/40">
@@ -59,18 +37,12 @@ export function HowItWorks() {
                 </p>
             </div>
 
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-100px" }}
-                className="grid gap-8 md:grid-cols-2 lg:grid-cols-4"
-            >
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                 {steps.map((step, index) => (
-                    <motion.div
+                    <div
                         key={index}
-                        variants={itemVariants}
-                        className="flex flex-col items-center text-center space-y-4 p-6 rounded-2xl bg-secondary/20 hover:bg-secondary/40 transition-colors"
+                        className="flex flex-col items-center text-center space-y-4 p-6 rounded-2xl bg-secondary/20 hover:bg-secondary/40 transition-colors animate-in fade-in zoom-in-95 duration-700 fill-mode-both"
+                        style={{ animationDelay: `${index * 150}ms` }}
                     >
                         <div className="p-4 rounded-full bg-primary/10 text-primary">
                             <step.icon className="h-8 w-8" />
@@ -79,9 +51,9 @@ export function HowItWorks() {
                         <p className="text-sm text-muted-foreground leading-relaxed">
                             {step.description}
                         </p>
-                    </motion.div>
+                    </div>
                 ))}
-            </motion.div>
+            </div>
         </section>
     );
 }

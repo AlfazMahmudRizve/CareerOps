@@ -14,8 +14,10 @@
 
 ### 2. Next-Gen Resume Builder
 *   **Interactive Form**: Easy-to-use inputs for Experience, Education, Projects, and Certifications.
+*   **Best-Practice Hierarchy**: Sections organized for maximum readability and ATS compatibility.
+*   **Personal Profile**: Granular extraction of Father's Name, Nationality, and other vital details.
 *   **Live Preview**: Real-time PDF generation as you type.
-*   **Smart Import**: Extract data effortlessly from existing PDF resumes (Powered by server-side parsing).
+*   **Smart Import**: Extract data effortlessly from existing PDF resumes using custom NLP heuristics.
 *   **ATS Mode**: Toggle between a beautiful modern layout and a raw text view optimized for Applicant Tracking Systems.
 
 ### 3. Modern Tech Stack
@@ -24,8 +26,10 @@ Built with the latest web technologies for speed, performance, and scalability.
 *   **Language**: [TypeScript](https://www.typescriptlang.org/)
 *   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 *   **UI Components**: Custom components with [Lucide Icons](https://lucide.dev/).
+*   **NLP**: [Compromise](https://compromise.cool/) (Rule-based NLP for robust keyword extraction)
+*   **PDF Parsing**: [pdf2json](https://github.com/modesty/pdf2json) with custom coordinate-aware text reconstruction.
 *   **PDF Generation**: [@react-pdf/renderer](https://react-pdf.org/).
-*   **Animations**: [Framer Motion](https://www.framer.com/motion/).
+*   **Debloated**: Zero external animation libraries (Native Tailwind CSS/Radix animations).
 
 ## 🛠️ Getting Started
 

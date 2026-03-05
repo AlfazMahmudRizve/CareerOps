@@ -27,26 +27,38 @@ export async function POST(req: NextRequest) {
             });
 
             parser.on("pdfParser_dataReady", (pdfData: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                // Manual extraction for better control
                 try {
                     let extractedText = '';
 
-                    // pdfData.Pages is an array of pages
                     if (pdfData && pdfData.Pages) {
                         pdfData.Pages.forEach((page: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                            // page.Texts is an array of text objects
                             if (page.Texts) {
-                                page.Texts.forEach((textObj: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                                    // textObj.R is an array of text runs
+                                // Sort text items by Y position first, then X position
+                                // This preserves the visual layout of the PDF
+                                const sortedTexts = [...page.Texts].sort((a: any, b: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                                    const yDiff = (a.y || 0) - (b.y || 0);
+                                    if (Math.abs(yDiff) > 0.3) return yDiff; // Different line (threshold)
+                                    return (a.x || 0) - (b.x || 0); // Same line, sort by X
+                                });
+
+                                let lastY = -1;
+
+                                sortedTexts.forEach((textObj: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                                     if (textObj.R) {
+                                        const currentY = textObj.y || 0;
+
+                                        // If Y position changed significantly, insert a newline
+                                        if (lastY >= 0 && Math.abs(currentY - lastY) > 0.3) {
+                                            extractedText += '\n';
+                                        }
+                                        lastY = currentY;
+
                                         textObj.R.forEach((run: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                                            // run.T is the actual text, URI encoded
                                             if (run.T) {
                                                 try {
                                                     const decoded = decodeURIComponent(run.T);
                                                     extractedText += decoded + ' ';
                                                 } catch {
-                                                    // Fallback if decoding fails
                                                     extractedText += run.T + ' ';
                                                 }
                                             }
@@ -54,8 +66,8 @@ export async function POST(req: NextRequest) {
                                     }
                                 });
                             }
-                            // Add a newline after each page
-                            extractedText += '\n';
+                            // Add a page break
+                            extractedText += '\n\n';
                         });
                     }
 

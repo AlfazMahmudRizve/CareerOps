@@ -1,19 +1,12 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Linkedin, ExternalLink, Code, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 export function AboutAuthor() {
     return (
         <section className="container py-24 px-4 md:px-6 border-t border-border/40 bg-gradient-to-b from-background to-secondary/5">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="max-w-4xl mx-auto text-center space-y-8"
-            >
+            <div className="max-w-4xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-1000 fill-mode-both">
                 <div className="space-y-4">
                     <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
                         Built by Alfaz Mahmud Rizve
@@ -47,7 +40,7 @@ export function AboutAuthor() {
                         </Link>
                     </div>
                 </div>
-            </motion.div>
+            </div>
         </section>
     );
 }

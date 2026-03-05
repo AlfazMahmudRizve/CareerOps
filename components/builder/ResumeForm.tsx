@@ -6,12 +6,24 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
 export type ResumeData = {
     fullName: string;
     email: string;
     phone: string;
     linkedin: string;
     portfolio: string;
+    personalProfile?: {
+        fatherName: string;
+        motherName: string;
+        nationality: string;
+        dateOfBirth: string;
+        address: string;
+        gender: string;
+        maritalStatus: string;
+    };
     summary: string;
     experience: {
         company: string;
@@ -75,6 +87,7 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
     // Collapsible State
     const [sectionsOpen, setSectionsOpen] = useState({
         personal: true,
+        profile: true,
         experience: true,
         education: false,
         projects: false,
@@ -85,25 +98,6 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
     const toggleSection = (section: keyof typeof sectionsOpen) => {
         setSectionsOpen(prev => ({ ...prev, [section]: !prev[section] }));
     };
-
-    // Watch for changes and propagate up
-    // In a real app, we might use debouncing here
-
-
-    // Effect to trigger onChange when formValues change could be implemented, 
-    // but for performance, we might just pass the `watch` result or control to the parent
-    // However, specifically for the preview to need real-time updates:
-    // We can use a useEffect on the parent or just let the parent control the state.
-    // For this "Split Screen", commonly the parent holds state.
-    // But react-hook-form is uncontrolled by default.
-    // Let's assume the parent passes a handler that we call on change.
-    // Or simpler: The parent renders this Form and the Preview. 
-    // The Form notifies parent on Change.
-
-    // A simple way to sync is to use `useEffect` to call onChange(formValues)
-    // whenever formValues changes. 
-
-    // For now, let's implement the 'Import' logic.
 
     const handleSmartImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -125,7 +119,7 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
             const parseData = await parseResponse.json();
             const pdfText = parseData.text;
 
-            // Task 2: Structure Data via n8n Proxy
+            // Task 2: Structure Data via JSON POST
             const structureResponse = await fetch('/api/structure', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -145,6 +139,15 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                 phone: n8nData.personal?.phone || n8nData.phone || '',
                 linkedin: n8nData.personal?.linkedin || n8nData.linkedin || '',
                 portfolio: n8nData.personal?.portfolio || n8nData.portfolio || '',
+                personalProfile: {
+                    fatherName: n8nData.personalProfile?.fatherName || '',
+                    motherName: n8nData.personalProfile?.motherName || '',
+                    nationality: n8nData.personalProfile?.nationality || '',
+                    dateOfBirth: n8nData.personalProfile?.dateOfBirth || '',
+                    address: n8nData.personalProfile?.address || '',
+                    gender: n8nData.personalProfile?.gender || '',
+                    maritalStatus: n8nData.personalProfile?.maritalStatus || '',
+                },
                 summary: n8nData.personal?.summary || n8nData.summary || '',
 
                 experience: Array.isArray(n8nData.experience) ? n8nData.experience.map((exp: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -182,8 +185,6 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
             // Reset form with mapped data
             reset(mappedData);
             onChange(mappedData);
-
-            // alert('Import Complete!'); // Optional: Replace with toast if available
 
         } catch (error) {
             console.error("Import Error:", error);
@@ -229,54 +230,72 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Full Name</label>
-                            <input
-                                {...register('fullName')}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="John Doe"
-                            />
+                            <Input {...register('fullName')} placeholder="John Doe" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Email</label>
-                            <input
-                                {...register('email')}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="john@example.com"
-                            />
+                            <Input {...register('email')} placeholder="john@example.com" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Phone</label>
-                            <input
-                                {...register('phone')}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="+1 234 567 890"
-                            />
+                            <Input {...register('phone')} placeholder="+1 234 567 890" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">LinkedIn</label>
-                            <input
-                                {...register('linkedin')}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="linkedin.com/in/john"
-                            />
+                            <Input {...register('linkedin')} placeholder="linkedin.com/in/john" />
                         </div>
                         <div className="space-y-2 sm:col-span-2">
                             <label className="text-sm font-medium">Portfolio</label>
-                            <input
-                                {...register('portfolio')}
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="whoisalfaz.me"
-                            />
+                            <Input {...register('portfolio')} placeholder="whoisalfaz.me" />
                         </div>
                     </div>
+                </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Professional Summary</label>
-                        <textarea
-                            {...register('summary')}
-                            className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Driven developer with 5+ years of experience..."
-                        />
+                {/* Personal Profile Section */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleSection('profile' as any)}>
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                            <FileText className="w-4 h-4" /> Personal Profile
+                        </h3>
+                        {sectionsOpen.profile ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </div>
+                    {sectionsOpen.profile && (
+                        <div className="grid gap-4 sm:grid-cols-3 p-4 rounded-lg border bg-card/50">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Father's Name</label>
+                                <Input {...register('personalProfile.fatherName')} placeholder="Father's Name" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Mother's Name</label>
+                                <Input {...register('personalProfile.motherName')} placeholder="Mother's Name" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Nationality</label>
+                                <Input {...register('personalProfile.nationality')} placeholder="Bangladeshi" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Date of Birth</label>
+                                <Input {...register('personalProfile.dateOfBirth')} placeholder="May 16, 1997" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Gender</label>
+                                <Input {...register('personalProfile.gender')} placeholder="Male" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Marital Status</label>
+                                <Input {...register('personalProfile.maritalStatus')} placeholder="Single" />
+                            </div>
+                            <div className="space-y-1 sm:col-span-3">
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Permanent Address</label>
+                                <Input {...register('personalProfile.address')} placeholder="Full Address" />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Professional Summary</label>
+                    <Textarea {...register('summary')} placeholder="Driven developer with 5+ years of experience..." />
                 </div>
 
                 {/* Experience */}
@@ -315,41 +334,24 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Company</label>
-                                                <input
-                                                    {...register(`experience.${index}.company`)}
-                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                                />
+                                                <Input {...register(`experience.${index}.company`)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Role</label>
-                                                <input
-                                                    {...register(`experience.${index}.role`)}
-                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                                />
+                                                <Input {...register(`experience.${index}.role`)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Start Date</label>
-                                                <input
-                                                    {...register(`experience.${index}.startDate`)}
-                                                    placeholder="Jan 2023"
-                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                                />
+                                                <Input {...register(`experience.${index}.startDate`)} placeholder="Jan 2023" />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">End Date</label>
-                                                <input
-                                                    {...register(`experience.${index}.endDate`)}
-                                                    placeholder="Present"
-                                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                                />
+                                                <Input {...register(`experience.${index}.endDate`)} placeholder="Present" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-xs font-medium uppercase text-muted-foreground">Description</label>
-                                            <textarea
-                                                {...register(`experience.${index}.description`)}
-                                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                            />
+                                            <Textarea {...register(`experience.${index}.description`)} />
                                         </div>
                                     </div>
                                 ))}
@@ -393,24 +395,24 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">School</label>
-                                                <input {...register(`education.${index}.school`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" />
+                                                <Input {...register(`education.${index}.school`)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Degree</label>
-                                                <input {...register(`education.${index}.degree`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" />
+                                                <Input {...register(`education.${index}.degree`)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Start Year</label>
-                                                <input {...register(`education.${index}.startDate`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" placeholder="2020" />
+                                                <Input {...register(`education.${index}.startDate`)} placeholder="2020" />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">End Year</label>
-                                                <input {...register(`education.${index}.endDate`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" placeholder="2024" />
+                                                <Input {...register(`education.${index}.endDate`)} placeholder="2024" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-xs font-medium uppercase text-muted-foreground">Description</label>
-                                            <textarea {...register(`education.${index}.description`)} className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                                            <Textarea {...register(`education.${index}.description`)} />
                                         </div>
                                     </div>
                                 ))}
@@ -454,20 +456,20 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Title</label>
-                                                <input {...register(`projects.${index}.title`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" />
+                                                <Input {...register(`projects.${index}.title`)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Tech Stack</label>
-                                                <input {...register(`projects.${index}.techStack`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" placeholder="React, Node.js" />
+                                                <Input {...register(`projects.${index}.techStack`)} placeholder="React, Node.js" />
                                             </div>
                                             <div className="space-y-2 sm:col-span-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Link</label>
-                                                <input {...register(`projects.${index}.link`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" />
+                                                <Input {...register(`projects.${index}.link`)} />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-xs font-medium uppercase text-muted-foreground">Description</label>
-                                            <textarea {...register(`projects.${index}.description`)} className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                                            <Textarea {...register(`projects.${index}.description`)} />
                                         </div>
                                     </div>
                                 ))}
@@ -511,15 +513,15 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Name</label>
-                                                <input {...register(`certifications.${index}.name`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" />
+                                                <Input {...register(`certifications.${index}.name`)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Issuer</label>
-                                                <input {...register(`certifications.${index}.issuer`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" />
+                                                <Input {...register(`certifications.${index}.issuer`)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-medium uppercase text-muted-foreground">Date</label>
-                                                <input {...register(`certifications.${index}.date`)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm" placeholder="2023" />
+                                                <Input {...register(`certifications.${index}.date`)} placeholder="2023" />
                                             </div>
                                         </div>
                                     </div>
@@ -534,9 +536,8 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                     <h3 className="text-lg font-semibold">Skills</h3>
                     <div className="space-y-2">
                         <label className="text-sm text-muted-foreground">Comma separated list</label>
-                        <textarea
+                        <Textarea
                             {...register('skills')}
-                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="React, TypeScript, Next.js, Node.js..."
                         />
                     </div>
