@@ -135,7 +135,14 @@ export async function POST(req: NextRequest) {
             const expLines = sections.experience.split('\n').filter(l => l.length > 0);
             const dateRegex = /((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s*\d{4}|\b\d{4})\s*(?:-|–|to)\s*(Present|Current|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s*\d{4}|\b\d{4})/i;
 
-            let currentEntry: any = null;
+            interface ExpEntry {
+                role: string;
+                company: string;
+                startDate: string;
+                endDate: string;
+                descLines: string[];
+            }
+            let currentEntry: ExpEntry | null = null;
 
             for (let i = 0; i < expLines.length; i++) {
                 const line = expLines[i];
@@ -197,7 +204,13 @@ export async function POST(req: NextRequest) {
         const parsedProjects: { title: string; techStack: string; link: string; description: string }[] = [];
         if (sections.projects) {
             const projLines = sections.projects.split('\n').filter((l: string) => l.trim().length > 0);
-            let currentProject: any = null;
+            interface ProjEntry {
+                title: string;
+                techStack: string;
+                link: string;
+                descLines: string[];
+            }
+            let currentProject: ProjEntry | null = null;
 
             for (const line of projLines) {
                 if (!line.startsWith('•') && !line.startsWith('-') && !line.startsWith('*') && line.length < 60) {

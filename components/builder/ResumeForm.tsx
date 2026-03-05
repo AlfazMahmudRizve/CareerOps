@@ -150,7 +150,7 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                 },
                 summary: n8nData.personal?.summary || n8nData.summary || '',
 
-                experience: Array.isArray(n8nData.experience) ? n8nData.experience.map((exp: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+                experience: Array.isArray(n8nData.experience) ? n8nData.experience.map((exp: { company?: string; role?: string; startDate?: string; endDate?: string; description?: string }) => ({
                     company: exp.company || '',
                     role: exp.role || '',
                     startDate: exp.startDate || '',
@@ -158,7 +158,7 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                     description: exp.description || ''
                 })) : [],
 
-                education: Array.isArray(n8nData.education) ? n8nData.education.map((edu: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+                education: Array.isArray(n8nData.education) ? n8nData.education.map((edu: { school?: string; degree?: string; startDate?: string; endDate?: string; description?: string }) => ({
                     school: edu.school || '',
                     degree: edu.degree || '',
                     startDate: edu.startDate || '',
@@ -166,14 +166,14 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                     description: edu.description || ''
                 })) : [],
 
-                projects: Array.isArray(n8nData.projects) ? n8nData.projects.map((proj: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+                projects: Array.isArray(n8nData.projects) ? n8nData.projects.map((proj: { title?: string; techStack?: string; link?: string; description?: string }) => ({
                     title: proj.title || '',
                     techStack: proj.techStack || '',
                     link: proj.link || '',
                     description: proj.description || ''
                 })) : [],
 
-                certifications: Array.isArray(n8nData.certifications) ? n8nData.certifications.map((cert: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+                certifications: Array.isArray(n8nData.certifications) ? n8nData.certifications.map((cert: { name?: string; issuer?: string; date?: string }) => ({
                     name: cert.name || '',
                     issuer: cert.issuer || '',
                     date: cert.date || ''
@@ -253,7 +253,7 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
 
                 {/* Personal Profile Section */}
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleSection('profile' as any)}>
+                    <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleSection('profile')}>
                         <h3 className="text-lg font-semibold flex items-center gap-2">
                             <FileText className="w-4 h-4" /> Personal Profile
                         </h3>
@@ -262,11 +262,11 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                     {sectionsOpen.profile && (
                         <div className="grid gap-4 sm:grid-cols-3 p-4 rounded-lg border bg-card/50">
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Father's Name</label>
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Father&apos;s Name</label>
                                 <Input {...register('personalProfile.fatherName')} placeholder="Father's Name" />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Mother's Name</label>
+                                <label className="text-[10px] font-bold uppercase text-muted-foreground">Mother&apos;s Name</label>
                                 <Input {...register('personalProfile.motherName')} placeholder="Mother's Name" />
                             </div>
                             <div className="space-y-1">
