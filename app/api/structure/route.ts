@@ -253,13 +253,17 @@ export async function POST(req: NextRequest) {
         }
         let parsedSkills = '';
         if (sections.skills) {
-            // Clean up skills: replace newlines with commas, remove duplicate commas
+            // Clean up skills: remove bullets, replace newlines/pipes with commas, remove duplicates
             parsedSkills = sections.skills
-                .replace(/\n/g, ', ')
-                .replace(/,\s*,/g, ',')
-                .replace(/^,\s*/, '')
-                .replace(/,\s*$/, '')
-                .trim();
+                .replace(/[•*-]/g, ',') // Replace all bullets/dashes with commas
+                .replace(/[|]/g, ',')   // Replace pipes with commas
+                .replace(/\n/g, ', ')    // Replace newlines with commas
+                .split(',')
+                .map(s => s.trim())
+                .filter(s => s.length > 2 && !/^(skills|core\s*skills|technical\s*skills)$/i.test(s))
+                .filter((v, i, a) => a.indexOf(v) === i) // Unique
+                .sort((a, b) => a.localeCompare(b))      // Sort alphabetically
+                .join(', ');
         }
 
         // ==========================================
@@ -277,13 +281,22 @@ export async function POST(req: NextRequest) {
 
         if (sections.personalProfile) {
             const profileText = sections.personalProfile;
-            personalProfile.fatherName = (profileText.match(/Father['s]*\s*Name\s*[:|-]\s*(.*)/i) || [])[1]?.trim() || '';
-            personalProfile.motherName = (profileText.match(/Mother['s]*\s*Name\s*[:|-]\s*(.*)/i) || [])[1]?.trim() || '';
-            personalProfile.nationality = (profileText.match(/Nationality\s*[:|-]\s*(.*)/i) || [])[1]?.trim() || '';
-            personalProfile.dateOfBirth = (profileText.match(/(?:Date\s*of\s*Birth|DOB)\s*[:|-]\s*(.*)/i) || [])[1]?.trim() || '';
-            personalProfile.address = (profileText.match(/(?:Permanent\s*Address|Address)\s*[:|-]\s*(.*)/i) || [])[1]?.trim() || '';
-            personalProfile.gender = (profileText.match(/Gender\s*[:|-]\s*(.*)/i) || [])[1]?.trim() || '';
-            personalProfile.maritalStatus = (profileText.match(/Marital\s*Status\s*[:|-]\s*(.*)/i) || [])[1]?.trim() || '';
+            // Helper to extract field while stopping at the next logical key or separator
+            const extractField = (pattern: RegExp) => {
+                const match = profileText.match(pattern);
+                return match ? match[1]?.trim() || '' : '';
+            };
+
+            // Non-greedy lookaheads for common keys to prevent over-capturing
+            const lookahead = '(?=\\s*(?:Father|Mother|Nationality|Date|DOB|Permanent|Address|Gender|Marital|Religion|\\||\\n|$))';
+
+            personalProfile.fatherName = extractField(new RegExp(`Father['s]*\\s*Name\\s*[:|-]\\s*(.*?)${lookahead}`, 'i'));
+            personalProfile.motherName = extractField(new RegExp(`Mother['s]*\\s*Name\\s*[:|-]\\s*(.*?)${lookahead}`, 'i'));
+            personalProfile.nationality = extractField(new RegExp(`Nationality\\s*[:|-]\\s*(.*?)${lookahead}`, 'i'));
+            personalProfile.dateOfBirth = extractField(new RegExp(`(?:Date\\s*of\\s*Birth|DOB)\\s*[:|-]\\s*(.*?)${lookahead}`, 'i'));
+            personalProfile.address = extractField(new RegExp(`(?:Permanent\\s*Address|Address)\\s*[:|-]\\s*(.*?)${lookahead}`, 'i'));
+            personalProfile.gender = extractField(new RegExp(`Gender\\s*[:|-]\\s*(.*?)${lookahead}`, 'i'));
+            personalProfile.maritalStatus = extractField(new RegExp(`Marital\\s*Status\\s*[:|-]\\s*(.*?)${lookahead}`, 'i'));
         }
 
         // ==========================================

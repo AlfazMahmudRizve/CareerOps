@@ -42,27 +42,51 @@ export async function POST(req: NextRequest) {
                                 });
 
                                 let lastY = -1;
+                                let lastX = -1;
+                                let lastWidth = 0;
 
-                                sortedTexts.forEach((textObj: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                                sortedTexts.forEach((textObj: any) => {
                                     if (textObj.R) {
                                         const currentY = textObj.y || 0;
+                                        const currentX = textObj.x || 0;
 
-                                        // If Y position changed significantly, insert a newline
+                                        // 1. Line Break Logic
                                         if (lastY >= 0 && Math.abs(currentY - lastY) > 0.3) {
-                                            extractedText += '\n';
+                                            extractedText = extractedText.trim() + '\n';
+                                            lastX = -1; // Reset X for new line
                                         }
-                                        lastY = currentY;
 
-                                        textObj.R.forEach((run: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                                        // 2. Horizontal Spacing Logic
+                                        // If we are on the same line, check the gap between last block's end and current block's start
+                                        if (lastX >= 0 && Math.abs(currentY - lastY) <= 0.3) {
+                                            const gap = currentX - (lastX + lastWidth);
+                                            // pdf2json x units are roughly characters.
+                                            // A gap > 0.1 usually means a space is intended if not already present.
+                                            if (gap > 0.1 && !extractedText.endsWith(' ')) {
+                                                extractedText += ' ';
+                                            }
+                                        }
+
+                                        lastY = currentY;
+                                        lastX = currentX;
+                                        lastWidth = textObj.w || 0;
+
+                                        textObj.R.forEach((run: any) => {
                                             if (run.T) {
                                                 try {
                                                     const decoded = decodeURIComponent(run.T);
-                                                    extractedText += decoded + ' ';
+                                                    // Only add space if decoded value doesn't already have one and it's not empty
+                                                    extractedText += decoded;
                                                 } catch {
-                                                    extractedText += run.T + ' ';
+                                                    extractedText += run.T;
                                                 }
                                             }
                                         });
+                                        // Add a space after each block's runs to be safe,
+                                        // but trim double spaces later
+                                        if (!extractedText.endsWith(' ')) {
+                                            extractedText += ' ';
+                                        }
                                     }
                                 });
                             }
