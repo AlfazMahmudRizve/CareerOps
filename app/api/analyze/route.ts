@@ -105,6 +105,7 @@ export async function POST(req: NextRequest) {
         const analysisData = {
             matchScore: matchScore,
             missingKeywords: finalMissing.length > 0 ? finalMissing : [],
+            matchedKeywords: finalMatched.length > 0 ? finalMatched : [],
             feedback: `Analyzed core concepts from your resume against ${totalJDKeywords} key requirements. Your resume perfectly matches or aligns with ${finalMatched.length} core terms. ${finalMissing.length > 0
                 ? 'Consider adding the highlighted missing keywords to improve your ATS score.'
                 : 'Great job! No major keyword gaps detected.'

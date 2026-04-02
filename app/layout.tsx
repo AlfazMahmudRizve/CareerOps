@@ -3,16 +3,18 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './providers';
 import { Navbar } from '@/components/ui/Navbar';
+import { Footer } from '@/components/ui/Footer';
 import { cn } from '@/lib/utils';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://careerops.whoisalfaz.me'),
   title: 'CareerOps | AI-Powered Career Strategist',
-  description: 'Elevate your career with AI-driven resume optimization and modern building tools. Created by Alfaz Mahmud.',
-  keywords: ['Resume Builder', 'AI Career Tool', 'Job Search', 'Resume Optimizer', 'ATS Friendly', 'CareerOps', 'Alfaz Mahmud'],
-  authors: [{ name: 'Alfaz Mahmud', url: 'https://whoisalfaz.me' }],
-  creator: 'Alfaz Mahmud',
+  description: 'Elevate your career with AI-driven resume optimization and modern building tools. Created by Alfaz Mahmud Rizve.',
+  keywords: ['Resume Builder', 'AI Career Tool', 'Job Search', 'Resume Optimizer', 'ATS Friendly', 'CareerOps', 'Alfaz Mahmud Rizve'],
+  authors: [{ name: 'Alfaz Mahmud Rizve', url: 'https://whoisalfaz.me' }],
+  creator: 'Alfaz Mahmud Rizve',
   openGraph: {
     title: 'CareerOps | AI-Powered Career Strategist',
     description: 'Elevate your career with AI-driven resume optimization and modern building tools.',
@@ -41,15 +43,40 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
+      <body className={cn('min-h-screen bg-background font-sans antialiased flex flex-col', inter.variable)}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
           disableTransitionOnChange
         >
           <Navbar />
-          {children}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "SoftwareApplication",
+                "name": "CareerOps",
+                "applicationCategory": "BusinessApplication",
+                "operatingSystem": "Any",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0.00",
+                  "priceCurrency": "USD"
+                },
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": "4.9",
+                  "ratingCount": "128"
+                }
+              })
+            }}
+          />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

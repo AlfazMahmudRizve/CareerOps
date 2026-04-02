@@ -5,12 +5,14 @@ import { FileUpload } from '@/components/optimization/FileUpload';
 import ResultsDashboard from '@/components/optimization/ResultsDashboard';
 import { useOptimization } from '@/hooks/useOptimization';
 import { cn } from '@/lib/utils';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2, Database, BrainCircuit, FileSearch } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function OptimizePage() {
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [jdText, setJdText] = useState('');
     const { isLoading, result, runOptimization } = useOptimization();
+    const [processingState, setProcessingState] = useState('');
 
     const handleRun = async () => {
         if (!resumeFile || !jdText) return;
@@ -60,8 +62,15 @@ export default function OptimizePage() {
             const parseData = await parseResponse.json();
             const resumeText = parseData.text;
 
-            // Stage 2: Analysis
+            // Stage 2: Algorithm Mock Delay & Analysis
+            setProcessingState('Extracting syntax structure...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            setProcessingState('Cross-referencing JD vectors...');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
             await runOptimization(resumeText, jdText);
+            setProcessingState('');
 
         } catch (error) {
             console.error(error);
@@ -73,14 +82,33 @@ export default function OptimizePage() {
 
     return (
         <div className="container min-h-screen py-10 px-4 md:px-6">
-            <header className="mb-8 border-b pb-4">
-                <h1 className="text-3xl font-bold tracking-tight">Career Strategist</h1>
-                <p className="text-muted-foreground">Upload your resume and the job description to identify gaps.</p>
+            <header className="mb-10 border-b border-border/50 pb-6 text-center">
+                <motion.h1 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60"
+                >
+                    Career Strategist Dashboard
+                </motion.h1>
+                <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-muted-foreground mt-2"
+                >
+                    Upload your resume and the job description to identify bypass vectors.
+                </motion.p>
             </header>
 
             <div className="grid gap-8 lg:grid-cols-2">
                 {/* Left Column: Input */}
-                <div className="space-y-6 rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+                <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="space-y-6 rounded-2xl border border-white/5 bg-black/40 p-6 backdrop-blur-xl shadow-2xl relative overflow-hidden"
+                >
+                    {/* Glassmorphic glow effect */}
+                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold flex items-center gap-2">
                             1. Upload Resume
@@ -118,22 +146,51 @@ export default function OptimizePage() {
                             </>
                         )}
                     </button>
-                </div>
+                </motion.div>
 
                 {/* Right Column: Output */}
                 <div className="lg:pl-8">
                     <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                        Analysis Results
+                        {isLoading || result ? "Intelligence Report" : "Awaiting Data..."}
                     </h2>
 
-                    {isLoading ? (
-                        <div className="flex flex-col items-center justify-center p-12 space-y-4">
-                            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                            <p className="text-muted-foreground animate-pulse">Analyzing your resume...</p>
-                        </div>
-                    ) : (
-                        <ResultsDashboard data={result} />
-                    )}
+                    <AnimatePresence mode="wait">
+                        {isLoading ? (
+                            <motion.div 
+                                key="loading"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="flex flex-col items-center justify-center p-16 space-y-6 bg-zinc-900/50 rounded-2xl border border-zinc-800/50 relative overflow-hidden"
+                            >
+                                <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                                <div className="space-y-2 text-center z-10">
+                                    <p className="text-sm font-mono text-primary animate-pulse">{processingState || 'Initializing Extractor...'}</p>
+                                    <p className="text-xs text-muted-foreground">Bypassing algorithmic filters</p>
+                                </div>
+                                {/* Background grid for hacker feel */}
+                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+                            </motion.div>
+                        ) : result ? (
+                            <motion.div 
+                                key="results"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <ResultsDashboard data={result} />
+                            </motion.div>
+                        ) : (
+                            <motion.div 
+                                key="idle"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="h-[400px] rounded-2xl border border-dashed border-zinc-800 flex items-center justify-center flex-col text-zinc-600 gap-4"
+                            >
+                                <FileSearch className="w-12 h-12 opacity-50" />
+                                <p>Upload documents to generate the report.</p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </div>

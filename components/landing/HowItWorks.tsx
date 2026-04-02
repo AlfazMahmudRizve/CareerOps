@@ -1,6 +1,7 @@
 'use client';
 
 import { Upload, FileSearch, Sparkles, FileCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const steps = [
     {
@@ -15,8 +16,8 @@ const steps = [
     },
     {
         icon: Sparkles,
-        title: 'AI Analysis',
-        description: 'Our stateless agent identifies gaps, missing keywords, and structural issues.',
+        title: 'Algorithmic Analysis',
+        description: 'Our stateless engine identifies gaps, missing keywords, and structural issues.',
     },
     {
         icon: FileCheck,
@@ -25,35 +26,76 @@ const steps = [
     },
 ];
 
+const containerVariants = {
+    hidden: {},
+    visible: {
+        transition: { staggerChildren: 0.12, delayChildren: 0.1 },
+    },
+};
+
+const stepVariants = {
+    hidden: { opacity: 0, y: 40, scale: 0.9 },
+    visible: { 
+        opacity: 1, y: 0, scale: 1,
+        transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const },
+    },
+};
+
 export function HowItWorks() {
     return (
         <section className="container py-24 md:py-32 px-4 md:px-6 border-t border-border/40">
-            <div className="text-center mb-16">
+            <motion.div 
+                className="text-center mb-16"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+            >
                 <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
                     How CareerOps Works
                 </h2>
                 <p className="mt-4 text-muted-foreground max-w-[600px] mx-auto">
                     A simple, four-step process to double your interview chances without risking your privacy.
                 </p>
-            </div>
+            </motion.div>
 
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <motion.div 
+                className="grid gap-8 md:grid-cols-2 lg:grid-cols-4"
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.2 }}
+            >
                 {steps.map((step, index) => (
-                    <div
+                    <motion.div
                         key={index}
-                        className="flex flex-col items-center text-center space-y-4 p-6 rounded-2xl bg-secondary/20 hover:bg-secondary/40 transition-colors animate-in fade-in zoom-in-95 duration-700 fill-mode-both"
-                        style={{ animationDelay: `${index * 150}ms` }}
+                        variants={stepVariants}
+                        whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                        className="flex flex-col items-center text-center space-y-4 p-6 rounded-2xl bg-secondary/20 hover:bg-secondary/40 transition-colors relative group"
                     >
-                        <div className="p-4 rounded-full bg-primary/10 text-primary">
+                        {/* Step number badge */}
+                        <motion.span 
+                            className="absolute -top-3 bg-primary text-primary-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center"
+                            initial={{ scale: 0 }}
+                            whileInView={{ scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.3 + index * 0.1, type: 'spring', stiffness: 300 }}
+                        >
+                            {index + 1}
+                        </motion.span>
+                        <motion.div 
+                            className="p-4 rounded-full bg-primary/10 text-primary"
+                            whileHover={{ rotate: 360, transition: { duration: 0.6 } }}
+                        >
                             <step.icon className="h-8 w-8" />
-                        </div>
+                        </motion.div>
                         <h3 className="text-xl font-semibold">{step.title}</h3>
                         <p className="text-sm text-muted-foreground leading-relaxed">
                             {step.description}
                         </p>
-                    </div>
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </section>
     );
 }

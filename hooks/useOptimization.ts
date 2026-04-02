@@ -4,6 +4,7 @@ export type OptimizationResult = {
     matchScore: number;
     score?: number; // Legacy support
     missingKeywords: string[];
+    matchedKeywords: string[];
     feedback: string;
     fix?: string;
 };
@@ -34,6 +35,7 @@ export function useOptimization() {
             setResult({
                 matchScore: data.matchScore || data.score || 0,
                 missingKeywords: data.missingKeywords || [],
+                matchedKeywords: data.matchedKeywords || [],
                 feedback: data.feedback || 'Analysis complete.',
                 fix: data.fix || '',
                 ...data
@@ -44,6 +46,7 @@ export function useOptimization() {
             setResult({
                 matchScore: 0,
                 missingKeywords: [],
+                matchedKeywords: [],
                 feedback: 'Failed to analyze resume. Please try again.',
                 fix: ''
             });

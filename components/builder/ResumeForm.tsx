@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Plus, Trash2, Upload, Loader2, FileText, ChevronDown, ChevronUp, GraduationCap, Briefcase, Award, Code } from 'lucide-react';
+import { Plus, Trash2, Upload, Loader2, FileText, ChevronDown, ChevronUp, GraduationCap, Briefcase, Award, Code, Camera, X } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +15,7 @@ export type ResumeData = {
     phone: string;
     linkedin: string;
     portfolio: string;
+    profilePhoto?: string; // base64 data URL
     personalProfile?: {
         fatherName: string;
         motherName: string;
@@ -60,6 +61,7 @@ interface ResumeFormProps {
 
 export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
     const [isImporting, setIsImporting] = useState(false);
+    const [profilePhoto, setProfilePhoto] = useState<string | undefined>(defaultValues.profilePhoto);
     const { register, control, watch, reset } = useForm<ResumeData>({
         defaultValues,
     });
@@ -195,6 +197,30 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
         }
     };
 
+    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Photo must be under 2MB.');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target?.result as string;
+            setProfilePhoto(dataUrl);
+            const currentData = watch();
+            onChange({ ...currentData, profilePhoto: dataUrl });
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    };
+
+    const removePhoto = () => {
+        setProfilePhoto(undefined);
+        const currentData = watch();
+        onChange({ ...currentData, profilePhoto: undefined });
+    };
+
     return (
         <div className="space-y-8 p-6 pb-24">
             {/* Import Section */}
@@ -221,7 +247,44 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
                 </p>
             </div>
 
-            <form onChange={() => onChange(watch())} className="space-y-6">
+            {/* Profile Photo Upload */}
+            <div className="space-y-3">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Camera className="w-4 h-4" /> Profile Photo
+                </h3>
+                <div className="flex items-center gap-4">
+                    <div className="relative w-20 h-20 rounded-lg border-2 border-dashed border-border bg-muted/50 flex items-center justify-center overflow-hidden group">
+                        {profilePhoto ? (
+                            <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={removePhoto}
+                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                >
+                                    <X className="w-5 h-5 text-white" />
+                                </button>
+                            </>
+                        ) : (
+                            <Camera className="w-6 h-6 text-muted-foreground" />
+                        )}
+                    </div>
+                    <div>
+                        <input type="file" id="photo-upload" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
+                        <label
+                            htmlFor="photo-upload"
+                            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                        >
+                            <Upload className="w-3 h-3" />
+                            {profilePhoto ? 'Change Photo' : 'Upload Photo'}
+                        </label>
+                        <p className="mt-1 text-[10px] text-muted-foreground">JPG, PNG. Max 2MB. Shows in PDF export.</p>
+                    </div>
+                </div>
+            </div>
+
+            <form onChange={() => onChange({ ...watch(), profilePhoto })} className="space-y-6">
                 {/* Personal Details */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">

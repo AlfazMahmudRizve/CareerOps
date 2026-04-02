@@ -161,6 +161,7 @@ export const ExecutiveTemplate = ({ data }: { data: ResumeData }) => {
 
     // Placeholder for missing Title/Image/Location
     const placeholderImage = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"; // Standard square placeholder
+    const profileImage = data.profilePhoto || placeholderImage;
     const professionalTitle = "Professional"; // Or leave empty if preferred, strictly follows structure though.
 
     return (
@@ -182,7 +183,7 @@ export const ExecutiveTemplate = ({ data }: { data: ResumeData }) => {
                     </View>
                     <View style={styles.headerRight}>
                         {/* Note: React-PDF Image component requires a valid src (URL or base64) */}
-                        <Image style={styles.profileImage} src={placeholderImage} /> {/* eslint-disable-line jsx-a11y/alt-text */}
+                        <Image style={styles.profileImage} src={profileImage} /> {/* eslint-disable-line jsx-a11y/alt-text */}
                     </View>
                 </View>
 
@@ -308,6 +309,11 @@ export const ExecutiveTemplate = ({ data }: { data: ResumeData }) => {
                         </View>
                     </View>
                 )}
+
+                {/* Viral Embedded Footer */}
+                <Text style={{ position: 'absolute', bottom: 15, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#888888', fontStyle: 'italic' }}>
+                    Optimized to beat the algorithm by CareerOps.com
+                </Text>
             </Page>
         </Document>
     );
