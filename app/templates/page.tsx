@@ -58,7 +58,7 @@ export default function TemplatesPage() {
             ATS-Optimized Resume Templates
           </h1>
           <p className="mt-6 text-lg leading-8 text-muted-foreground">
-            Don't start from scratch. Choose a high-performing base template tailored to your specific industry and let our stateless engine format it perfectly.
+            Don&apos;t start from scratch. Choose a high-performing base template tailored to your specific industry and let our stateless engine format it perfectly.
           </p>
         </div>
 

@@ -119,7 +119,7 @@ export function Footer() {
         {/* SEO Text Block */}
         <div className="mt-16 pt-8 border-t border-border/50">
           <p className="text-xs leading-5 text-muted-foreground/70 max-w-5xl">
-            <strong>Why CareerOps?</strong> In today's digital hiring landscape, the best candidates are often blocked by automated bots. CareerOps is your ultimate career companion, offering a free suite of tools including an ATS-compliant resume builder, automated keyword optimization scanner, and professional CV structuring that guarantees high parse rates. Everything happens completely in your browser—meaning ultimate privacy with zero server-side storage of your personal data. Get more interviews with a modern cv formatted for 2026 applicant tracking systems.
+            <strong>Why CareerOps?</strong> In today&apos;s digital hiring landscape, the best candidates are often blocked by automated bots. CareerOps is your ultimate career companion, offering a free suite of tools including an ATS-compliant resume builder, automated keyword optimization scanner, and professional CV structuring that guarantees high parse rates. Everything happens completely in your browser—meaning ultimate privacy with zero server-side storage of your personal data. Get more interviews with a modern cv formatted for 2026 applicant tracking systems.
           </p>
         </div>
 

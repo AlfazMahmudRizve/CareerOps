@@ -5,7 +5,7 @@ import { FileUpload } from '@/components/optimization/FileUpload';
 import ResultsDashboard from '@/components/optimization/ResultsDashboard';
 import { useOptimization } from '@/hooks/useOptimization';
 import { cn } from '@/lib/utils';
-import { Sparkles, Loader2, Database, BrainCircuit, FileSearch } from 'lucide-react';
+import { Sparkles, Loader2, FileSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function OptimizePage() {
