@@ -26,6 +26,7 @@ export function Navbar() {
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
                         <Link href="/optimize" className="hover:text-foreground transition-colors">Analyzer</Link>
                         <Link href="/build" className="hover:text-foreground transition-colors">Resume Builder</Link>
+                        <Link href="/templates" className="hover:text-foreground transition-colors">Templates</Link>
                         <Link href="https://whoisalfaz.me/portfolio/" target="_blank" className="hover:text-foreground transition-colors">Portfolio</Link>
                     </nav>
                     <div className="ml-4 pl-4 border-l border-white/10">

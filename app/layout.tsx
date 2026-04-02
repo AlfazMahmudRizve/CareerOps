@@ -10,22 +10,22 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://careerops.whoisalfaz.me'),
-  title: 'CareerOps | AI-Powered Career Strategist',
-  description: 'Elevate your career with AI-driven resume optimization and modern building tools. Created by Alfaz Mahmud Rizve.',
-  keywords: ['Resume Builder', 'AI Career Tool', 'Job Search', 'Resume Optimizer', 'ATS Friendly', 'CareerOps', 'Alfaz Mahmud Rizve'],
+  title: 'CareerOps | Privacy-First ATS Resume Builder',
+  description: 'A completely free, stateless ATS resume builder and CV keyword scanner. Build professional resumes that pass algorithmic screening with zero data retention.',
+  keywords: ['Free ATS Resume Builder', 'Stateless Resume Builder', 'Privacy First CV Maker', 'Algorithmic Screening', 'Resume Optimization', 'CareerOps', 'Alfaz Mahmud Rizve'],
   authors: [{ name: 'Alfaz Mahmud Rizve', url: 'https://whoisalfaz.me' }],
   creator: 'Alfaz Mahmud Rizve',
   openGraph: {
-    title: 'CareerOps | AI-Powered Career Strategist',
-    description: 'Elevate your career with AI-driven resume optimization and modern building tools.',
+    title: 'CareerOps | Privacy-First ATS Resume Builder',
+    description: 'A completely free, stateless ATS resume builder and CV keyword scanner.',
     url: 'https://careerops.whoisalfaz.me',
     siteName: 'CareerOps',
     images: [
       {
-        url: '/logo.png',
+        url: '/logo.png', // Fallback, update if needed
         width: 1200,
         height: 630,
-        alt: 'CareerOps Preview',
+        alt: 'CareerOps ATS Resume Builder',
       },
     ],
     locale: 'en_US',
@@ -57,14 +57,15 @@ export default function RootLayout({
               __html: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "SoftwareApplication",
-                "name": "CareerOps",
+                "name": "CareerOps ATS Resume Builder",
                 "applicationCategory": "BusinessApplication",
-                "operatingSystem": "Any",
+                "operatingSystem": "Web",
                 "offers": {
                   "@type": "Offer",
                   "price": "0.00",
                   "priceCurrency": "USD"
                 },
+                "featureList": "ATS Resume Building, Keyword Extraction, Stateless Privacy Architecture",
                 "aggregateRating": {
                   "@type": "AggregateRating",
                   "ratingValue": "4.9",
