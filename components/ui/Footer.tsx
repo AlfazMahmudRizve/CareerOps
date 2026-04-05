@@ -51,19 +51,19 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/analyze" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    <span className="text-sm text-muted-foreground/50 cursor-default">
                       Resume Keyword Scanner
-                    </Link>
+                    </span>
                   </li>
                   <li>
-                    <Link href="/templates" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    <span className="text-sm text-muted-foreground/50 cursor-default">
                       Executive CV Templates
-                    </Link>
+                    </span>
                   </li>
                    <li>
-                    <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    <span className="text-sm text-muted-foreground/50 cursor-default">
                       Career Optimization API (Soon)
-                    </Link>
+                    </span>
                   </li>
                 </ul>
               </div>

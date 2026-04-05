@@ -124,8 +124,11 @@ function BuildContent() {
 
 export default function BuildPage() {
     return (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center font-mono text-primary animate-pulse">Initializing Environment...</div>}>
-            <BuildContent />
-        </Suspense>
+        <>
+            <h1 className="sr-only">CareerOps ATS Resume Builder</h1>
+            <Suspense fallback={<div className="flex h-screen items-center justify-center font-mono text-primary animate-pulse">Initializing Environment...</div>}>
+                <BuildContent />
+            </Suspense>
+        </>
     );
 }
