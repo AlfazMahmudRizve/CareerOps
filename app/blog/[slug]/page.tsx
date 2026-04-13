@@ -4,7 +4,6 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import Image from 'next/image';
 
 export async function generateStaticParams() {
   const posts = getPosts();
@@ -106,7 +105,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       <div className="mt-16 pt-8 border-t border-zinc-800">
         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-8 text-center">
             <h3 className="text-2xl font-bold text-white mb-4">Want to check your resume privately?</h3>
-            <p className="text-zinc-400 mb-6">CareerOps analyzes your resume entirely in your browser. We never see your data, we never store it, and we definitely don't sell it.</p>
+            <p className="text-zinc-400 mb-6">CareerOps analyzes your resume entirely in your browser. We never see your data, we never store it, and we definitely don&apos;t sell it.</p>
             <Link 
                 href="/build" 
                 className="inline-block bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold px-8 py-4 rounded-full transition-colors"
