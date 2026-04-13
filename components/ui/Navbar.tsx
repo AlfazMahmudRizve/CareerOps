@@ -24,8 +24,9 @@ export function Navbar() {
 
                 <div className="flex items-center gap-4">
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                        <span className="opacity-50 cursor-not-allowed hidden">Analyzer</span>
+                        <Link href="/optimize" className="hover:text-foreground transition-colors">Analyzer</Link>
                         <Link href="/build" className="hover:text-foreground transition-colors">Resume Builder</Link>
+                        <Link href="/blog" className="hover:text-emerald-500 transition-colors">Blog</Link>
                         <span className="opacity-50 cursor-not-allowed hidden">Templates</span>
                         <Link href="https://whoisalfaz.me/portfolio/" target="_blank" className="hover:text-foreground transition-colors">Portfolio</Link>
                     </nav>

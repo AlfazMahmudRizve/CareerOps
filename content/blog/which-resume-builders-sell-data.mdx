@@ -1,0 +1,163 @@
+---
+title: "Which Resume Builders Are Selling Your Data? I Audited 7 Privacy Policies So You Don't Have To"
+description: "A deep dive audit into the privacy policies of 7 major ATS resume builders. Find out who is selling your data, tracking you, and using your history for AI."
+publishDate: "2026-04-13"
+author: "Alfaz Mahmud Rizve"
+authorRole: "Automation Architect"
+readingTime: "12 min read"
+category: "Privacy & ATS Security"
+---
+
+*Alfaz Mahmud Rizve is a full-stack automation architect and the builder of CareerOps, a stateless, client-side ATS resume optimizer engineered specifically to never store user data.*
+
+---
+
+Your resume is not just a document. It's a financial history, a geographic profile, a skills map, and in many cases an indirect identifier for your current employer's projects, your salary range, and your home neighborhood. When you upload it to a free resume builder, you are handing all of that over — often permanently.
+
+I built CareerOps because I wanted an ATS optimizer that processed resumes entirely in the browser, touched no server, and stored nothing. Not because I had something against resume builders as a category. But because when I started researching the privacy policies of the tools people actually use, I found something that genuinely disturbed me.
+
+This is that research.
+
+---
+
+## What Your Resume Actually Contains (And Why It's Valuable)
+
+Before we get into the policies, let's be precise about what resume data actually is. When you fill out a resume builder, you're typically entering:
+
+- Your full legal name and home address
+- Phone number and email
+- Every employer you've worked for, with dates and locations
+- Your job titles — which can reveal your seniority, salary band, and career trajectory
+- Your education history, including graduation year (which narrows your age)
+- Skills and tools you use — which advertisers and recruiters pay to know
+- Sometimes: your photo, your salary expectations, and your LinkedIn URL
+
+That data package, in aggregate, is worth real money. Data brokers pay for it. Recruiters pay for it. Ad networks pay for it. And "free" resume builders — the ones that don't charge you — have to make money somehow.
+
+---
+
+## The 7 Tools I Audited
+
+I reviewed the privacy policies of seven widely used resume builders, reading the actual legal text rather than the marketing copy. The tools: **resume.io**, **Zety**, **Resume.com** (ResumeBuilder.com), **Novoresume**, **Kickresume**, **Enhancv**, and **LiveCareer**.
+
+For each one, I looked at:
+1. What data is collected during resume creation
+2. Whether data is retained after you close or delete your account
+3. Whether data is shared with third parties (and who those third parties are)
+4. Whether data is sold — the specific word "sell" — to outside companies
+5. Whether they explicitly use your content to train AI models
+
+---
+
+## Resume.io — Explicit About Data Sales
+
+Resume.io is operated by Talent Worldwide Inc., which also owns career.io. Their privacy policy is unusually candid. Under the section covering how they use your personal data, you'll find a clause that reads — in plain terms — that they may use resume data to sell to third parties, including data brokers, for targeted advertising, profiling, or to sell to others.
+
+This includes your name, email, job title, phone number, address, birth date, employment experience, and education.
+
+The policy notes they will "ask your consent" before doing this — but that consent is usually buried in the sign-up flow as a pre-ticked box or an opt-out email setting most users never see.
+
+Resume.io has tens of thousands of Trustpilot reviews and a genuinely good product. But the data terms deserve to be read before you upload your address and work history.
+
+---
+
+## Zety and Novoresume — The Tracker Problem
+
+A developer audit published in early 2026 found that both Zety and Novoresume route Mixpanel analytics through custom intermediary domains — a technique specifically designed to evade ad blockers and privacy tools. What this means in practice: your activity inside the resume builder is being tracked in a way that standard browser privacy extensions cannot detect.
+
+Novoresume also implements the Facebook Conversions API on the server side. This means that even if you have Facebook blocked in your browser, data about your session can travel directly from Novoresume's servers to Facebook's servers without you seeing the request or being able to stop it.
+
+This isn't a bug. It's an engineering choice. These are complex systems that require deliberate implementation. When two major resume builders independently build the same ad-blocker evasion infrastructure, you're looking at an industry pattern, not an accident.
+
+---
+
+## LiveCareer — The Data Breach That Already Happened
+
+LiveCareer is one of the oldest resume platforms in the space, founded in 2004 and used by over 10 million people across 180 countries. In 2025, Cybernews research revealed that a misconfigured cloud setup exposed an enormous volume of user data — resumes dating from 2016 to 2025. Nine years of personally identifiable information, sitting exposed.
+
+The critical detail here isn't the breach itself. Data breaches happen. The critical detail is that those resumes were being stored at all — and stored for years after users may have considered themselves done with the platform.
+
+This is what long-term server-side storage means in practice. Even if a company's intentions are good, the data they accumulate becomes a liability. It can be breached, subpoenaed, acquired in a merger, or sold if the company pivots or closes.
+
+---
+
+## ResumeBuilder.com — Third Party Sharing at Scale
+
+ResumeBuilder.com (and its parent network) are explicit that your information may be shared with third parties "which may involve in some cases a monetary compensation." The policy lists who can receive your data: CV editors, employers, recruiters, job posting sites, and — significantly — "other third parties who are interested in receiving information that we collect about you."
+
+That last category is not defined. It means anyone who pays for access.
+
+The opt-out exists, but it requires you to modify account settings or contact customer service — meaning the default is opt-in sharing.
+
+---
+
+## Kickresume and Enhancv — Less Alarming, Still Worth Reading
+
+Kickresume and Enhancv are better than most on this list. Neither uses language as explicit as resume.io's data-sale clause. Both mention standard data sharing with "service providers" and analytics tools, but neither explicitly claims to sell resume content to data brokers.
+
+That said, both retain data after account deletion unless you specifically request removal via a Data Protection Officer contact. And both use third-party analytics — at minimum Google Analytics — which means your session behavior on their platforms is part of Google's advertising dataset.
+
+---
+
+## The AI Training Problem
+
+A 2024 audit of 12 resume builders found that four of them explicitly stated in their privacy policies that "anonymized or aggregated" resume data could be used to improve AI models. This matters more than it sounds.
+
+Research from MIT has shown that so-called anonymized professional data — when it includes job titles, company names, university names, and geographic regions — can be re-identified with over 85% accuracy. "Anonymized" data used for AI training is not necessarily safe data.
+
+If your resume goes into a training dataset, it stops being a document you control. It becomes a data point in a system that may be licensed to employers, recruiters, or third-party HR platforms.
+
+---
+
+## What "Stateless" Actually Means
+
+CareerOps works differently by design. When you upload your PDF and paste a job description, all analysis runs client-side — in your browser's JavaScript engine, on your machine. Nothing is sent to a server. Nothing is logged. Nothing is stored.
+
+This is possible because modern browsers are genuinely capable of document parsing, text extraction, and keyword analysis without server involvement. The reason most resume tools don't work this way isn't technical — it's business model. Server-side storage enables data collection. Client-side processing doesn't.
+
+The tradeoff is real: CareerOps can't show you your resume history from six months ago because we never stored it. But if your goal is to optimize a resume without trading your career data for the privilege, that tradeoff is worth making.
+
+---
+
+## A Practical Checklist Before You Upload to Any Resume Tool
+
+Whether you use CareerOps or another platform, here's what I'd recommend checking before handing your resume to any web tool:
+
+**Before uploading:**
+- Remove or redact your home address — an employer only needs a city
+- Remove salary information if it appears anywhere in your document
+- Check whether the tool requires you to create an account before generating a resume. Account creation almost always means data retention.
+
+**When reviewing the privacy policy:**
+- Search for the word "sell" — not just "share." These have different legal meanings.
+- Look for how long data is retained after account deletion. Anything over 30 days warrants a question.
+- Check whether the tool explicitly mentions AI model training as a use case for your data.
+
+**After you're done:**
+- If you used a tool that stores data, submit a deletion request via their privacy portal or email their Data Protection Officer.
+- Set a calendar reminder at 60 days to verify the deletion was processed.
+
+**For highest-stakes applications** — roles at companies where your employer identity needs to stay confidential, senior positions where salary negotiating leverage matters — consider tools that process locally, or use a LaTeX-based template offline.
+
+---
+
+## The Bigger Picture
+
+The resume builder market is worth over $400 million and growing. The business models behind "free" tools require monetization of something. Usually, that something is you — your data, your career history, your contact information.
+
+This isn't a conspiracy. It's just how ad-supported and data-supported software works. But job seekers in 2026 are increasingly aware of it, and the industry hasn't caught up with that awareness. The privacy policies have gotten longer and more complex, not more transparent.
+
+The technology to build a genuinely private resume tool exists today. CareerOps proves it. The reason more tools don't work this way is that there's more money in storing your data than in respecting it.
+
+---
+
+## Tools Mentioned in This Guide
+
+- **CareerOps** — Free, stateless, client-side ATS resume optimizer. No account required, no data stored. [Try it free →](https://careerops.whoisalfaz.me)
+- **Reactive Resume** — Open-source resume builder with optional self-hosting. Best for developers who want full data control.
+- **FlowCV** — Genuinely free resume builder with no watermarks and transparent data practices.
+- **Jobscan** — Paid ATS scanner ($49.95/month) with detailed keyword analysis. Read their privacy policy carefully before uploading.
+
+---
+
+*Have a question about how CareerOps processes your data (or doesn't)? Read the technical architecture notes at whoisalfaz.me/labs or reach out directly.*
