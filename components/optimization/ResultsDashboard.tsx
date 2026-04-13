@@ -1,7 +1,8 @@
 'use client';
 
-import { Check, Copy, AlertTriangle, Share2 } from 'lucide-react';
-import { useState } from 'react';
+import { Check, Copy, AlertTriangle, Share2, Loader2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { toPng } from 'html-to-image';
 import { motion } from 'framer-motion';
 
 const cardVariants = {
@@ -25,6 +26,8 @@ export default function ResultsDashboard({ data }: { data: any }) { // eslint-di
     const missing = data?.missingKeywords || [];
     const [copied, setCopied] = useState(false);
     const [shared, setShared] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
 
     // Color Logic
     const getColor = (s: number) => {
@@ -47,11 +50,34 @@ export default function ResultsDashboard({ data }: { data: any }) { // eslint-di
         }
     };
 
-    const shareResults = () => {
-        const text = `🚀 I just optimized my resume with CareerOps! My ATS Score is ${score}/100. Check your resume for free at: https://careerops.whoisalfaz.me`;
-        navigator.clipboard.writeText(text);
-        setShared(true);
-        setTimeout(() => setShared(false), 2000);
+    const shareResults = async () => {
+        if (!cardRef.current) return;
+        
+        setIsGenerating(true);
+        try {
+            // Copy text payload
+            const text = `🚀 I just optimized my resume with CareerOps! My ATS Score is ${score}/100.\n\nCheck your resume for free without handing over your data: https://careerops.whoisalfaz.me`;
+            await navigator.clipboard.writeText(text);
+
+            // Generate Viral Scorecard Image
+            const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
+            
+            // Trigger automatic download
+            const link = document.createElement('a');
+            link.download = `CareerOps-ATS-Score-${score}.png`;
+            link.href = dataUrl;
+            link.click();
+            
+            setShared(true);
+            setTimeout(() => setShared(false), 2000);
+        } catch (err) {
+            console.error('Failed to generate scorecard image', err);
+            // Fallback copied state
+            setShared(true);
+            setTimeout(() => setShared(false), 2000);
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     if (!data) return null;
@@ -81,12 +107,13 @@ export default function ResultsDashboard({ data }: { data: any }) { // eslint-di
                     
                     <motion.button
                         onClick={shareResults}
+                        disabled={isGenerating}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest text-zinc-500 hover:text-primary transition-colors"
+                        className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest text-zinc-500 hover:text-emerald-500 transition-colors disabled:opacity-50"
                     >
-                        {shared ? <Check className="w-3 h-3 text-green-500" /> : <Share2 className="w-3 h-3" />}
-                        {shared ? 'Link Copied!' : 'Share Results'}
+                        {isGenerating ? <Loader2 className="w-3 h-3 animate-spin text-emerald-500" /> : shared ? <Check className="w-3 h-3 text-emerald-500" /> : <Share2 className="w-3 h-3" />}
+                        {isGenerating ? 'Rendering Image...' : shared ? 'Image Saved & Copied!' : 'Download Scorecard'}
                     </motion.button>
                 </motion.div>
 
@@ -209,6 +236,87 @@ export default function ResultsDashboard({ data }: { data: any }) { // eslint-di
                     </div>
                 </motion.div>
             )}
+
+            {/* Hidden Shareable Viral Scorecard (Used only by html-to-image) */}
+            <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none">
+                <div 
+                    ref={cardRef} 
+                    className="w-[1200px] h-[630px] bg-zinc-950 flex flex-col justify-between p-16 font-sans border-t-[8px] border-emerald-500 shadow-2xl relative overflow-hidden"
+                >
+                    {/* Background Hackery */}
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/40 via-zinc-950 to-zinc-950 z-0"></div>
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] z-0"></div>
+
+                    <div className="relative z-10 flex justify-between items-start">
+                        <div>
+                            <h1 className="text-6xl font-black text-white flex items-center gap-4">
+                                Career<span className="text-emerald-500">Ops</span>
+                            </h1>
+                            <p className="mt-4 text-2xl text-zinc-400 font-medium tracking-wide">Privacy-First ATS Optimizer</p>
+                        </div>
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 px-6 py-3 rounded-full flex items-center gap-3 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                            <Check className="w-8 h-8 text-emerald-400" />
+                            <span className="text-emerald-400 font-bold text-xl uppercase tracking-wider">Stateless Architecture</span>
+                        </div>
+                    </div>
+
+                    <div className="relative z-10 flex items-center gap-16 mt-8">
+                        {/* Huge Score */}
+                        <div className={`relative w-[320px] h-[320px] shrink-0 flex flex-col items-center justify-center rounded-full border-[12px] shadow-[0_0_100px_rgba(0,0,0,0.5)] bg-zinc-900 ${getColor(score)} ${getGlow(score)}`}>
+                            <span className="text-9xl font-black">{score}</span>
+                            <span className="text-3xl font-bold opacity-60 uppercase tracking-widest mt-2 mt-4">Match</span>
+                        </div>
+
+                        {/* Stats Panel */}
+                        <div className="flex-1 space-y-12 bg-zinc-900/80 p-10 rounded-3xl border border-zinc-700/50 backdrop-blur-xl shadow-2xl">
+                            <div>
+                                <h3 className="text-2xl text-zinc-400 uppercase tracking-widest font-semibold mb-6 flex items-center gap-3">
+                                    <Check className="w-8 h-8 text-emerald-500" />
+                                    Detected Keywords
+                                </h3>
+                                <div className="flex flex-wrap gap-4">
+                                    {data?.matchedKeywords?.slice(0, 6).map((kw: string, i: number) => (
+                                        <span key={i} className="px-5 py-2.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg text-xl font-semibold">
+                                            {kw}
+                                        </span>
+                                    ))}
+                                    {data?.matchedKeywords?.length > 6 && (
+                                        <span className="text-zinc-500 text-xl font-medium px-5 py-2.5">+{data?.matchedKeywords?.length - 6} more</span>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 className="text-2xl text-zinc-400 uppercase tracking-widest font-semibold mb-6 flex items-center gap-3">
+                                    <AlertTriangle className="w-8 h-8 text-amber-500" />
+                                    Critical Missing
+                                </h3>
+                                <div className="flex flex-wrap gap-4">
+                                    {missing.length > 0 ? (
+                                        missing.slice(0, 5).map((kw: string, i: number) => (
+                                            <span key={i} className="px-5 py-2.5 bg-red-500/10 text-red-500 border border-red-500/30 rounded-lg text-xl font-semibold">
+                                                {kw}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span className="text-emerald-500 text-xl font-bold">100% Keyword Parity Achieved!</span>
+                                    )}
+                                    {missing.length > 5 && (
+                                        <span className="text-zinc-500 text-xl font-medium px-5 py-2.5">+{missing.length - 5} more</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="relative z-10 flex justify-between items-end border-t border-zinc-800/80 pt-8 mt-12">
+                        <p className="text-xl text-zinc-500 font-medium">Algorithmic Match Verified By CareerOps Intelligence</p>
+                        <p className="text-2xl text-white font-black tracking-wider flex items-center gap-3">
+                            <Share2 className="w-6 h-6 text-emerald-500"/> careerops.whoisalfaz.me
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
