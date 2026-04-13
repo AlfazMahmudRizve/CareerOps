@@ -27,7 +27,17 @@ export default function ResultsDashboard({ data }: { data: any }) { // eslint-di
     const [copied, setCopied] = useState(false);
     const [shared, setShared] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
+    const [copiedBullet, setCopiedBullet] = useState<number | null>(null);
     const cardRef = useRef<HTMLDivElement>(null);
+
+    const getTemplatesForKeyword = (kw: string) => [
+        `Demonstrated proficiency in ${kw} to streamline project deliverables and exceed quarterly expectations by 15%.`,
+        `Leveraged ${kw} to foster cross-functional collaboration, driving a 20% improvement in team operational efficiency.`,
+        `Applied advanced ${kw} methodologies to resolve critical bottlenecks, ensuring 100% compliance with stakeholder requirements.`,
+        `Mentored team members on best practices regarding ${kw}, elevating overall departmental performance and output quality.`,
+        `Integrated ${kw} directly into core team workflows, resulting in a measurable reduction in turnaround time.`
+    ];
 
     // Color Logic
     const getColor = (s: number) => {
@@ -161,21 +171,52 @@ export default function ResultsDashboard({ data }: { data: any }) { // eslint-di
                 <div className="flex flex-wrap gap-2">
                     {missing.length > 0 ? (
                         missing.map((kw: string, i: number) => (
-                            <motion.span 
+                            <motion.button 
                                 key={i} 
-                                className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-sm"
+                                onClick={() => setSelectedKeyword(kw)}
+                                className={`px-3 py-1 border rounded-full text-sm font-medium transition-all focus:outline-none cursor-pointer hover:-translate-y-0.5 ${selectedKeyword === kw ? 'bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50'}`}
                                 variants={badgeVariants}
                                 initial="hidden"
                                 animate="visible"
                                 custom={i}
                             >
                                 {kw}
-                            </motion.span>
+                            </motion.button>
                         ))
                     ) : (
                         <span className="text-green-500 text-sm">No critical keywords missing!</span>
                     )}
                 </div>
+
+                {/* Generator Expansion Panel */}
+                {selectedKeyword && (
+                    <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="mt-6 pt-6 border-t border-zinc-800"
+                    >
+                        <h4 className="text-zinc-300 text-sm font-bold tracking-wider uppercase mb-4 flex items-center gap-2">
+                            <Check className="w-4 h-4 text-emerald-500" /> Auto-Generated Fixes
+                        </h4>
+                        <div className="space-y-3">
+                            {getTemplatesForKeyword(selectedKeyword).map((template, idx) => (
+                                <div key={idx} className="group relative bg-black/50 border border-zinc-800 hover:border-zinc-700 p-4 rounded-xl text-sm leading-relaxed text-zinc-400 hover:text-zinc-200 transition-colors pr-12">
+                                    <span>{template}</span>
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(template);
+                                            setCopiedBullet(idx);
+                                            setTimeout(() => setCopiedBullet(null), 2000);
+                                        }}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-emerald-500 bg-zinc-900 border border-zinc-800 p-2 rounded-md transition-colors"
+                                    >
+                                        {copiedBullet === idx ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
             </motion.div>
 
             {/* Matched Keywords Section */}
