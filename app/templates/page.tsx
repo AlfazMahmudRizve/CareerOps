@@ -43,10 +43,7 @@ const CATEGORIES = [
   }
 ];
 
-export const metadata = {
-  title: 'ATS Resume Templates by Industry | CareerOps',
-  description: 'Free, ATS-optimized resume templates for Software Engineering, Product Management, Data Science, and Design. Build a resume that passes the scan.',
-};
+
 
 export default function TemplatesPage() {
   return (

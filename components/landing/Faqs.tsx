@@ -24,6 +24,34 @@ const faqs = [
   {
     question: "How do I share my ATS match score?",
     answer: "Once you run a scan against a job description, you'll see a 'Share Score' button in your results dashboard. Clicking this generates a viral copy-paste snippet you can share directly to LinkedIn to show off your competitive advantage."
+  },
+  {
+    question: "Does ATS read PDF files correctly?",
+    answer: "Yes, modern Applicant Tracking Systems can read PDF files perfectly, provided they are text-based and not scanned images. In fact, PDF is often preferred because it preserves your exact formatting across different devices. Our builder exports structurally compliant PDFs guaranteed to parse correctly."
+  },
+  {
+    question: "What ATS score is considered good or passing?",
+    answer: "Generally, an ATS match score of 80% or higher is considered a strong match and significantly increases your likelihood of passing algorithmic filters. Anything below 70% usually requires you to add more exact-match keywords from the job description."
+  },
+  {
+    question: "How do I pass the Workday ATS?",
+    answer: "Workday's ATS relies heavily on structured text parsing and strict keyword frequency matches. To format a resume for Workday, use a single-column layout, standard headers (like 'Work Experience' and 'Education'), standard bullet points without sub-nesting, and include verbatim phrases from their job listing."
+  },
+  {
+    question: "Why is a single-column resume format better for ATS?",
+    answer: "Many older ATS parsers read documents horizontally from top-left to bottom-right. When you use a two-column design, the system often jumbles the text, merging your contact info with your work experience. A single-column layout guarantees 100% accurate chronological parsing."
+  },
+  {
+    question: "Are graphics, icons, and logos ATS-friendly?",
+    answer: "No. Graphics, charts, and icons are ignored by Applicant Tracking Systems and can sometimes derail the parser, causing it to misread surrounding text. It's best to stick to clean, standard text. Let your achievements stand out, not your graphic design."
+  },
+  {
+    question: "Should I include my full address on my resume?",
+    answer: "No, a full street address is an outdated practice and poses a minor privacy risk. For modern applications and optimal ATS parsing, you only need to include your City, State, and Zip Code (e.g., 'Austin, TX')."
+  },
+  {
+    question: "Do I need a different resume for every job application?",
+    answer: "Yes, ideally. Because every job description has a unique set of hard skills, soft skills, and required keywords, submitting the exact same resume everywhere will result in low ATS match scores. CareerOps makes it easy to quickly duplicate your base resume and tweak it for specific roles."
   }
 ];
 

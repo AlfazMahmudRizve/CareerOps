@@ -10,14 +10,14 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://careerops.whoisalfaz.me'),
-  title: 'CareerOps | Privacy-First ATS Resume Builder',
-  description: 'A completely free, stateless ATS resume builder and CV keyword scanner. Build professional resumes that pass algorithmic screening with zero data retention.',
+  title: 'Free ATS Resume Builder — CareerOps',
+  description: 'Free ATS resume builder with keyword gap analysis. Privacy-first protection helping beat ATS. Zero data retention, free for job seekers today and always.',
   keywords: ['Free ATS Resume Builder', 'Stateless Resume Builder', 'Privacy First CV Maker', 'Algorithmic Screening', 'Resume Optimization', 'CareerOps', 'Alfaz Mahmud Rizve'],
   authors: [{ name: 'Alfaz Mahmud Rizve', url: 'https://whoisalfaz.me' }],
   creator: 'Alfaz Mahmud Rizve',
   openGraph: {
-    title: 'CareerOps | Privacy-First ATS Resume Builder',
-    description: 'A completely free, stateless ATS resume builder and CV keyword scanner.',
+    title: 'Free ATS Resume Builder — CareerOps',
+    description: 'Free ATS resume builder with keyword gap analysis. Privacy-first protection helping beat ATS. Zero data retention, free for job seekers today and always.',
     url: 'https://careerops.whoisalfaz.me',
     siteName: 'CareerOps',
     images: [
@@ -30,6 +30,13 @@ export const metadata: Metadata = {
     ],
     locale: 'en_US',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Free ATS Resume Builder — CareerOps',
+    description: 'Free ATS resume builder with keyword gap analysis. Privacy-first protection helping beat ATS. Zero data retention, free for job seekers today and always.',
+    creator: '@whoisalfazz',
+    images: ['/logo.png'],
   },
   icons: {
     icon: '/icon.png',

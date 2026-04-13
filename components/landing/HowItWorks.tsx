@@ -42,8 +42,25 @@ const stepVariants = {
 };
 
 export function HowItWorks() {
+    const howToSchema = {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Build an ATS-Optimized Resume",
+        "description": "A 4-step guide to uploading your resume, analyzing it against a job description, and getting an ATS match score.",
+        "step": steps.map((step, i) => ({
+            "@type": "HowToStep",
+            "position": i + 1,
+            "name": step.title,
+            "text": step.description
+        }))
+    };
+
     return (
         <section className="container py-24 md:py-32 px-4 md:px-6 border-t border-border/40">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+            />
             <motion.div 
                 className="text-center mb-16"
                 initial={{ opacity: 0, y: 20 }}
@@ -95,6 +112,27 @@ export function HowItWorks() {
                         </p>
                     </motion.div>
                 ))}
+            </motion.div>
+
+            <motion.div 
+                className="mt-24 prose prose-invert max-w-4xl mx-auto text-center space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+            >
+                <div className="p-8 rounded-2xl bg-secondary/10 border border-border/50 text-muted-foreground leading-relaxed">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">Master the Digital Hiring Landscape</h3>
+                    <p>
+                        Why use our <strong>free ATS resume builder</strong>? Today&apos;s hiring process is ruled by algorithms. Over 75% of resumes are discarded before a human even reads them because they lack the exact phrasing an enterprise ATS is programmed to find. CareerOps gives you the ultimate advantage by acting as your personal <strong>ATS keyword scanner</strong>.
+                    </p>
+                    <p className="mt-4">
+                        When you upload your existing resume and the job description you are targeting, our engine performs a precise <strong>resume gap analysis</strong>. We instantly identify the high-priority skills, missing critical keywords, and formatting errors that are actively causing your automated rejections. Unlike other platforms that lock your results behind expensive monthly paywalls or harvest your private career data for third-party advertisers, CareerOps is built on a strict privacy-first, stateless architecture. Your data is analyzed locally within your browser and never stored on our servers.
+                    </p>
+                    <p className="mt-4">
+                        By combining an intuitive interface, professional templates optimized for programmatic parsing, and deep ATS keyword scanning capabilities, our free ATS resume builder ensures your application gets routed directly to the hiring manager. Stop guessing what recruiters want. Run a comprehensive resume gap analysis today, embed the missing terms, structure your document flawlessly, and start landing the interviews you actually deserve.
+                    </p>
+                </div>
             </motion.div>
         </section>
     );
