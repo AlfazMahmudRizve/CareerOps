@@ -107,8 +107,8 @@ async function runTests() {
     extraFieldThatShouldBeStripped: "malicious payload"
   };
   const sanitized = sanitizeOutput(dirtyOutput, 'analyze');
-  assert(sanitized !== null && sanitized.matchScore === 85, "Sanitizer passes valid object");
-  assert(sanitized && (sanitized as any).extraFieldThatShouldBeStripped === undefined, "Sanitizer strips extra illegal fields");
+  assert(Boolean(sanitized && sanitized.matchScore === 85), "Sanitizer passes valid object");
+  assert(Boolean(sanitized && (sanitized as any).extraFieldThatShouldBeStripped === undefined), "Sanitizer strips extra illegal fields");
 
   // ----------------------------------------------------
   // SECTION 3: RATE LIMITER TESTS
