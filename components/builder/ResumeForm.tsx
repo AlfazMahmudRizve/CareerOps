@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { parsePdfFile } from '@/lib/pdf-parser';
 
 export type ResumeData = {
     fullName: string;
@@ -107,19 +108,12 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
 
         setIsImporting(true);
         try {
-            // Task 1: Extract Text via API
-            const formData = new FormData();
-            formData.append('file', file);
+            // Task 1: Extract Text (instant browser extraction with fallback)
+            const pdfText = await parsePdfFile(file);
 
-            const parseResponse = await fetch('/api/parse-pdf', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!parseResponse.ok) throw new Error('Failed to parse PDF');
-
-            const parseData = await parseResponse.json();
-            const pdfText = parseData.text;
+            if (!pdfText || pdfText.trim().length === 0) {
+                throw new Error('Failed to extract text from PDF');
+            }
 
             // Task 2: Structure Data via JSON POST
             const structureResponse = await fetch('/api/structure', {

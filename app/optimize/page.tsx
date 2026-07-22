@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import { Sparkles, Loader2, FileSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { parsePdfFile } from '@/lib/pdf-parser';
+
 export default function OptimizePage() {
     const [resumeFile, setResumeFile] = useState<File | null>(null);
     const [jdText, setJdText] = useState('');
@@ -21,42 +23,21 @@ export default function OptimizePage() {
         if (!resumeFile || !jdText) return;
         setErrorMsg(null);
 
-        // Stage 1: Extraction
         try {
-            const formData = new FormData();
-            formData.append('file', resumeFile);
+            setProcessingState('Extracting PDF text...');
+            const resumeText = await parsePdfFile(resumeFile);
 
-            const parseResponse = await fetch('/api/parse-pdf', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!parseResponse.ok) {
-                const contentType = parseResponse.headers.get("content-type");
-                let errorMessage = 'Unknown server error';
-
-                if (contentType && contentType.includes("application/json")) {
-                    const errorData = await parseResponse.json();
-                    errorMessage = errorData.error;
-                } else {
-                    errorMessage = `Server returned ${parseResponse.status} ${parseResponse.statusText}`;
-                    const text = await parseResponse.text();
-                    console.error('Server Error Text:', text);
-                }
-
-                setErrorMsg(`Failed to parse PDF: ${errorMessage}`);
+            if (!resumeText || resumeText.trim().length === 0) {
+                setErrorMsg('Failed to extract text from PDF. The PDF may be scanned as an image or empty.');
                 return;
             }
 
-            const parseData = await parseResponse.json();
-            const resumeText = parseData.text;
-
             // Stage 2: Algorithm Delay & Analysis
             setProcessingState('Extracting syntax structure...');
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 600));
             
             setProcessingState('Cross-referencing JD vectors...');
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            await new Promise(resolve => setTimeout(resolve, 800));
 
             await runOptimization(resumeText, jdText);
             setProcessingState('');

@@ -3,6 +3,9 @@ import { nim } from "@/lib/nim";
 import { SYSTEM_PROMPT, sanitizeOutput, detectInjection } from "@/lib/guardrail";
 import { checkRateLimit } from "@/lib/ratelimit";
 
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/rewrite
  *

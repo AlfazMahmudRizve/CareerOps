@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyze } from "@/lib/analyzer";
 import { checkRateLimit } from "@/lib/ratelimit";
 
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/analyze
  *
