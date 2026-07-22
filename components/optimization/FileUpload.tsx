@@ -92,7 +92,7 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
                 {fileStatus === 'success' && (
                     <div className="flex flex-col items-center">
                         <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
-                        <h3 className="text-lg font-semibold text-green-500">File Parsed</h3>
+                        <h3 className="text-lg font-semibold text-green-500">File Selected</h3>
                         <p className="text-sm text-muted-foreground mt-1">{fileName}</p>
                     </div>
                 )}
