@@ -13,29 +13,18 @@ export default function OptimizePage() {
     const [jdText, setJdText] = useState('');
     const { isLoading, result, runOptimization } = useOptimization();
     const [processingState, setProcessingState] = useState('');
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    const jdWordCount = jdText.trim() ? jdText.trim().split(/\s+/).length : 0;
 
     const handleRun = async () => {
         if (!resumeFile || !jdText) return;
+        setErrorMsg(null);
 
         // Stage 1: Extraction
         try {
             const formData = new FormData();
             formData.append('file', resumeFile);
-
-            // We need to handle loading state manually here or extend the hook
-            // For simplicity, let's assume runOptimization handles the loading UI for the WHOLE process if we pass it the file?
-            // The prompt says: "Refactor handleAnalyze... Stage 1... Stage 2..."
-            // But runOptimization hook currently does the Fetch to /api/analyze.
-            // I should probably modify runOptimization to accept TEXT, and do extraction HERE.
-
-            // Let's modify the loading state management to wrap this whole process.
-            // Actually, I can't access setIsLoading from the hook if it doesn't export it.
-            // Oh, the hook exports isLoading. But I can't SET it.
-            // I will implement the logic inside this component for the parser, then call runOptimization with text.
-            // But runOptimization sets loading.
-
-            // Wait, to show loading during parsing, I need local state or modifying the hook.
-            // Let's modify the hook later if needed, but for now:
 
             const parseResponse = await fetch('/api/parse-pdf', {
                 method: 'POST',
@@ -55,14 +44,14 @@ export default function OptimizePage() {
                     console.error('Server Error Text:', text);
                 }
 
-                alert(`Failed to parse PDF: ${errorMessage}`);
+                setErrorMsg(`Failed to parse PDF: ${errorMessage}`);
                 return;
             }
 
             const parseData = await parseResponse.json();
             const resumeText = parseData.text;
 
-            // Stage 2: Algorithm Mock Delay & Analysis
+            // Stage 2: Algorithm Delay & Analysis
             setProcessingState('Extracting syntax structure...');
             await new Promise(resolve => setTimeout(resolve, 1000));
             
@@ -74,7 +63,7 @@ export default function OptimizePage() {
 
         } catch (error) {
             console.error(error);
-            alert(`Error processing file: ${error instanceof Error ? error.message : String(error)}`);
+            setErrorMsg(`Error processing request: ${error instanceof Error ? error.message : String(error)}`);
         }
     };
 
@@ -109,6 +98,14 @@ export default function OptimizePage() {
                 >
                     {/* Glassmorphic glow effect */}
                     <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                    
+                    {errorMsg && (
+                        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between">
+                            <span>{errorMsg}</span>
+                            <button onClick={() => setErrorMsg(null)} className="text-red-400 font-bold hover:text-white ml-2">✕</button>
+                        </div>
+                    )}
+
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold flex items-center gap-2">
                             1. Upload Resume
@@ -117,14 +114,24 @@ export default function OptimizePage() {
                     </section>
 
                     <section className="space-y-4">
-                        <h2 className="text-xl font-semibold flex items-center gap-2">
-                            2. Job Description
-                        </h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                2. Job Description
+                            </h2>
+                            {jdText && (
+                                <span className={cn("text-xs font-mono", jdWordCount < 20 ? "text-amber-400" : "text-zinc-500")}>
+                                    {jdWordCount} words {jdWordCount < 20 ? "(min 20 recommended)" : ""}
+                                </span>
+                            )}
+                        </div>
                         <textarea
                             className="min-h-[200px] w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             placeholder="Paste the Job Description here..."
                             value={jdText}
-                            onChange={(e) => setJdText(e.target.value)}
+                            onChange={(e) => {
+                                setJdText(e.target.value);
+                                if (errorMsg) setErrorMsg(null);
+                            }}
                         />
                     </section>
 

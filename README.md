@@ -69,3 +69,23 @@ Built with the latest web technologies for speed, performance, and scalability.
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+## NVIDIA NIM Setup (Optional, Recommended)
+
+CareerOps can optionally use NVIDIA NIM to power the resume analyzer with semantic matching and real LLM-generated rewrite suggestions, instead of pure rule-based scoring. This produces noticeably better keyword coverage, contextual rewrites, and tone improvements for your resume bullets.
+
+**Environment variables**
+
+- `NVIDIA_NIM_BASE_URL` — defaults to `https://integrate.api.nvidia.com/v1`.
+- `NVIDIA_NIM_API_KEY` — your NVIDIA NIM API key (required for NIM mode).
+- `NVIDIA_NIM_MODEL` — model identifier (e.g. `meta/llama-3.1-70b-instruct`).
+- `ANALYZER_BACKEND` — `legacy` (rule-based, default) or `nim` (NVIDIA NIM).
+
+**Steps**
+
+1. Grab a free API key from [build.nvidia.com](https://build.nvidia.com).
+2. Copy `.env.example` to `.env.local` and paste your key into `NVIDIA_NIM_API_KEY`.
+3. Set `ANALYZER_BACKEND=nim` in `.env.local`.
+4. Restart the dev server (`npm run dev`).
+
+Legacy mode works out of the box without any API key — set `ANALYZER_BACKEND=legacy` (or leave it unset). If a NIM request fails, the analyzer automatically falls back to legacy mode. Note the rate limit of **30 requests / minute / IP** on the free tier.

@@ -1,135 +1,89 @@
-import { NextRequest, NextResponse } from 'next/server';
-import nlp from 'compromise';
+import { NextRequest, NextResponse } from "next/server";
+import { analyze } from "@/lib/analyzer";
+import { checkRateLimit } from "@/lib/ratelimit";
+
+/**
+ * POST /api/analyze
+ *
+ * Body: `{ resumeText: string, jdText: string }`
+ *
+ * Runs the configured analyzer backend (legacy keyword match by default,
+ * or the NIM-backed LLM pipeline when `ANALYZER_BACKEND=nim`) against the
+ * provided resume and job description, returning an ATS-style score plus
+ * matched/missing keywords and actionable feedback.
+ *
+ * Per-IP rate limit: 30 requests / 60 seconds (see `lib/ratelimit.ts`).
+ * When exceeded, returns 429 with a `Retry-After` header in seconds.
+ */
+
+const MAX_FIELD_LEN = 20_000;
+
+/**
+ * Extract a best-effort client IP from common proxy headers, falling
+ * back to the literal string `"unknown"` so all callers share one bucket
+ * rather than bypassing the limiter.
+ */
+function clientIp(req: NextRequest): string {
+    const fwd = req.headers.get("x-forwarded-for");
+    if (fwd) {
+        // x-forwarded-for can be a comma-separated chain; first hop is the client.
+        const first = fwd.split(",")[0]?.trim();
+        if (first) return first;
+    }
+    return req.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
+type AnalyzeBody = {
+    resumeText?: unknown;
+    jdText?: unknown;
+};
+
+function isValidBody(value: unknown): value is { resumeText: string; jdText: string } {
+    if (!value || typeof value !== "object") return false;
+    const v = value as AnalyzeBody;
+    return (
+        typeof v.resumeText === "string" &&
+        typeof v.jdText === "string" &&
+        v.resumeText.length > 0 &&
+        v.resumeText.length <= MAX_FIELD_LEN &&
+        v.jdText.length > 0 &&
+        v.jdText.length <= MAX_FIELD_LEN
+    );
+}
 
 export async function POST(req: NextRequest) {
+    // 1. Rate limit first so we don't waste cycles parsing abusive traffic.
+    const ip = clientIp(req);
+    const limit = checkRateLimit(ip);
+    if (!limit.allowed) {
+        const retryAfter = limit.retryAfterSec ?? 1;
+        return NextResponse.json(
+            { error: "rate limited" },
+            { status: 429, headers: { "Retry-After": String(retryAfter) } },
+        );
+    }
+
+    // 2. Validate input.
+    let body: unknown;
     try {
-        const body = await req.json();
-        const { resumeText, jdText } = body;
+        body = await req.json();
+    } catch {
+        return NextResponse.json({ error: "invalid input" }, { status: 400 });
+    }
 
-        if (!resumeText || !jdText) {
-            return NextResponse.json({ error: 'Missing resumeText or jdText' }, { status: 400 });
-        }
+    if (!isValidBody(body)) {
+        return NextResponse.json({ error: "invalid input" }, { status: 400 });
+    }
 
-        // Helper to extract meaningful keywords using compromise
-        const extractKeywords = (text: string) => {
-            const doc = nlp(text);
+    const { resumeText, jdText } = body;
 
-            // Extract Topics and Nouns
-            const topics = doc.topics().out('array');
-            const nouns = doc.nouns().out('array');
-
-            // Combine and normalize
-            const combined = [...topics, ...nouns];
-            const unique = new Set<string>();
-
-            // Small dynamic stopword filter
-            const noise = new Set(['experience', 'year', 'work', 'job', 'team', 'company', 'role', 'project', 'skill', 'business', 'process', 'manager', 'time', 'candidate', 'applicant', 'degree', 'opportunity', 'part', 'requirement', 'knowledge', 'system', 'fosters', 'engaging', 'excellence', 'lesson', 'lessons', 'responsibilities', 'responsibility', 'description', 'overview', 'summary']);
-
-            combined.forEach((phrase: string) => {
-                // Remove punctuation and normalize
-                const cleaned = phrase.toLowerCase().replace(/[.,!?;:()]/g, '').trim();
-
-                // If it's a multi-word phrase, we might want to keep it OR split it
-                // For skills, multi-word is often good (e.g. "Google Classroom")
-                if (cleaned.length > 2 && !noise.has(cleaned) && !/^\d+$/.test(cleaned)) {
-                    unique.add(cleaned);
-                }
-
-                // Also split by spaces to get individual words as backups
-                const words = cleaned.split(/\s+/);
-                if (words.length > 1) {
-                    words.forEach(word => {
-                        if (word.length > 3 && !noise.has(word) && !/^\d+$/.test(word)) {
-                            unique.add(word);
-                        }
-                    });
-                }
-            });
-
-            return Array.from(unique);
-        };
-
-        // Extract Keywords
-        const jdKeywords = extractKeywords(jdText);
-        const resumeKeywords = extractKeywords(resumeText);
-
-        const resumeKeywordArray: string[] = Array.from(new Set(resumeKeywords));
-
-        // Calculate Match
-        const matchedKeywords: string[] = [];
-        const missingKeywords: string[] = [];
-
-        jdKeywords.forEach(kw => {
-            // Fuzzy match: check if the exact word exists, or if a partial match exists
-            // This prevents "JavaScript" vs "javascript" vs "java script" issues
-            let isMatched = false;
-            for (const rk of resumeKeywordArray) {
-                if (rk.includes(kw) || kw.includes(rk)) {
-                    isMatched = true;
-                    break;
-                }
-            }
-
-            if (isMatched) {
-                matchedKeywords.push(kw);
-            } else {
-                missingKeywords.push(kw);
-            }
-        });
-
-        // Deduplicate output arrays
-        const finalMissing = Array.from(new Set(missingKeywords));
-        const finalMatched = Array.from(new Set(matchedKeywords));
-
-        // Limit the number of JD keywords evaluated to avoid diluting the score too much 
-        // with every single noun in a 3-page JD
-        const importantJdKeywords = jdKeywords.slice(0, 50);
-        const totalJDKeywords = importantJdKeywords.length || 1; // Prevent division by zero
-
-        let localMatchCount = 0;
-        importantJdKeywords.forEach(kw => {
-            for (const rk of resumeKeywordArray) {
-                if (rk.includes(kw) || kw.includes(rk)) {
-                    localMatchCount++;
-                    break;
-                }
-            }
-        });
-
-        const rawScore = Math.floor((localMatchCount / totalJDKeywords) * 100);
-
-        // Add a heuristic bump since raw keywords aren't perfect
-        const matchScore = Math.min(100, Math.max(0, rawScore + 15));
-
-        // Generate Analysis Object matching the frontend's expected schema
-        const analysisData = {
-            matchScore: matchScore,
-            missingKeywords: finalMissing.length > 0 ? finalMissing : [],
-            matchedKeywords: finalMatched.length > 0 ? finalMatched : [],
-            feedback: `Analyzed core concepts from your resume against ${totalJDKeywords} key requirements. Your resume perfectly matches or aligns with ${finalMatched.length} core terms. ${finalMissing.length > 0
-                ? 'Consider adding the highlighted missing keywords to improve your ATS score.'
-                : 'Great job! No major keyword gaps detected.'
-                }`,
-            fix: finalMissing.length > 0 ? `I recommend updating your Summary or Experience bullet points to naturally include concepts like: ${finalMissing.slice(0, 5).join(', ')}` : '',
-
-            // Keeping these for potential future use or debugging
-            strengths: [
-                `Strong coverage in: ${finalMatched.slice(0, 5).join(', ')}`,
-                "Formatting allows standard text extraction."
-            ],
-            gaps: [
-                finalMissing.length > 0 ? `Consider adding these concepts if applicable: ${finalMissing.slice(0, 5).join(', ')}` : "No major keyword gaps detected."
-            ],
-            recommendations: [
-                finalMissing.length > 0 ? "Tailor your experience bullet points to explicitly mention the missing concepts above." : "Your resume aligns well with standard job description terminology.",
-                "Ensure quantities and impact metrics are attached to your experience."
-            ]
-        };
-
-        return NextResponse.json(analysisData);
-
-    } catch (error) {
-        console.error('NLP Analyze Error:', error);
-        return NextResponse.json({ error: 'Failed to analyze resume' }, { status: 500 });
+    // 3. Run the analyzer and return its result verbatim.
+    try {
+        const result = await analyze({ resumeText, jdText });
+        return NextResponse.json(result);
+    } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("[api/analyze] analyze failed", err);
+        return NextResponse.json({ error: "analyze failed" }, { status: 500 });
     }
 }

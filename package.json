@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check-port": "node scripts/check-port.js",
+    "smoke": "node scripts/smoke-analyze.js"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.2",
