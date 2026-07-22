@@ -72,36 +72,36 @@ export function extractRawTextFromArrayBuffer(arrayBuffer: ArrayBuffer): string 
  * Tries instant client-side extraction first, falling back to /api/parse-pdf if needed.
  */
 export async function parsePdfFile(file: File): Promise<string> {
-  // 1. Try instant client-side linear extraction
+  // 1. Primary Strategy: Call /api/parse-pdf for structured text with clean word boundaries
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/parse-pdf', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.text && data.text.trim().length >= 10) {
+        return data.text.trim();
+      }
+    }
+  } catch (err) {
+    console.warn('/api/parse-pdf call failed, attempting client-side fallback:', err);
+  }
+
+  // 2. Secondary Strategy: Instant client-side linear stream extraction fallback
   try {
     const arrayBuffer = await file.arrayBuffer();
     const clientText = extractRawTextFromArrayBuffer(arrayBuffer);
-    if (clientText && clientText.length >= 20) {
+    if (clientText && clientText.length >= 10) {
       return clientText;
     }
   } catch (err) {
-    console.warn('Client-side PDF extraction skipped or returned short text:', err);
+    console.warn('Client-side PDF extraction fallback failed:', err);
   }
 
-  // 2. Fallback to API endpoint if client extraction returned insufficient text
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const response = await fetch('/api/parse-pdf', {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const contentType = response.headers.get('content-type');
-    let msg = 'Failed to parse PDF file';
-    if (contentType && contentType.includes('application/json')) {
-      const json = await response.json();
-      msg = json.error || msg;
-    }
-    throw new Error(msg);
-  }
-
-  const data = await response.json();
-  return data.text;
+  throw new Error('Failed to parse PDF file. The document may be empty or encrypted.');
 }
