@@ -54,12 +54,16 @@ function parseContactInfo(text: string) {
     const linkedinMatch = text.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[\w-]+/i);
     const portfolioMatch = text.match(/https?:\/\/(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i);
 
-    // Heuristic for name: first line that doesn't look like an email or URL
+    // Heuristic for name: first line that looks like a clean name (no emails, URLs, or labels)
     let fullName = 'Candidate';
     for (const line of lines.slice(0, 5)) {
-        if (!line.includes('@') && !line.includes('http') && !line.includes('.com') && line.length < 50) {
-            fullName = line.replace(/[^a-zA-Z\s.-]/g, '').trim() || fullName;
-            break;
+        if (/address|mobile|phone|email|location|curriculum|resume|cv/i.test(line)) continue;
+        if (!line.includes('@') && !line.includes('http') && !line.includes('.com')) {
+            const clean = line.replace(/[^a-zA-Z\s.-]/g, '').trim();
+            if (clean.length >= 3 && clean.length <= 40) {
+                fullName = clean;
+                break;
+            }
         }
     }
 
@@ -88,11 +92,11 @@ function parseResumeSections(text: string) {
     };
 
     const headerRegexes = {
-        summary: /^(summary|profile|about me|objective|professional summary)/i,
-        experience: /^(experience|work experience|work history|employment|professional experience)/i,
-        education: /^(education|academic background|qualifications)/i,
-        projects: /^(projects|key projects|personal projects|portfolio projects)/i,
-        skills: /^(skills|technical skills|core competencies|expertise|technologies)/i,
+        summary: /(summary|profile|about me|career objective|objective|professional summary)/i,
+        experience: /(work experience|professional experience|employment history|work history|experience)/i,
+        education: /(educational qualification|academic qualification|education|qualifications|academic background)/i,
+        projects: /(key projects|personal projects|portfolio projects|projects)/i,
+        skills: /(technical & language skills|technical skills|computer skills|core competencies|expertise|skills|technologies)/i,
     };
 
     for (const line of lines) {
@@ -101,7 +105,7 @@ function parseResumeSections(text: string) {
 
         let matchedHeader = false;
         for (const [sec, regex] of Object.entries(headerRegexes)) {
-            if (regex.test(trimmed)) {
+            if (regex.test(trimmed) && trimmed.length < 50) {
                 currentSection = sec as typeof currentSection;
                 matchedHeader = true;
                 break;
@@ -126,10 +130,10 @@ function parseExperience(lines: string[]): TailoredResumePayload['experience'] {
     let currentEntry: { company: string; role: string; startDate: string; endDate: string; description: string[] } | null = null;
 
     for (const line of lines) {
-        // Look for date-like line or role header
         const dateMatch = line.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|\d{4})\s*[-–—\s]\s*(Present|\d{4}|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i);
+        const hasSep = line.includes('|') || line.includes(' - ') || /designation:/i.test(line);
 
-        if (dateMatch || line.includes('|') || line.includes(' - ')) {
+        if (hasSep || (currentEntry === null && line.length > 2)) {
             if (currentEntry) {
                 entries.push({
                     ...currentEntry,
@@ -137,27 +141,30 @@ function parseExperience(lines: string[]): TailoredResumePayload['experience'] {
                 });
             }
 
-            const parts = line.split(/[|•–-]/).map((p) => p.trim());
-            const role = parts[0] || 'Position';
-            const company = parts[1] || 'Company';
+            let role = 'Professional';
+            let company = 'Company';
+
+            if (line.includes('|')) {
+                const parts = line.split('|').map((p) => p.trim());
+                role = parts[0] || role;
+                company = parts[1] || company;
+            } else if (/designation:/i.test(line)) {
+                const parts = line.split(/designation:/i).map((p) => p.trim());
+                company = parts[0] || company;
+                role = parts[1] || role;
+            } else {
+                role = line.trim();
+            }
 
             currentEntry = {
                 role,
                 company,
-                startDate: dateMatch ? dateMatch[1] : '2022',
+                startDate: dateMatch ? dateMatch[1] : '2018',
                 endDate: dateMatch ? dateMatch[2] : 'Present',
                 description: [],
             };
         } else if (currentEntry) {
             currentEntry.description.push(line);
-        } else {
-            currentEntry = {
-                role: 'Software Engineer / Professional',
-                company: 'Organization',
-                startDate: '2022',
-                endDate: 'Present',
-                description: [line],
-            };
         }
     }
 
