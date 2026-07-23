@@ -2,7 +2,7 @@
 
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Plus, Trash2, Upload, Loader2, FileText, ChevronDown, ChevronUp, GraduationCap, Briefcase, Award, Code, Camera, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 
@@ -66,6 +66,13 @@ export function ResumeForm({ defaultValues, onChange }: ResumeFormProps) {
     const { register, control, watch, reset } = useForm<ResumeData>({
         defaultValues,
     });
+
+    useEffect(() => {
+        reset(defaultValues);
+        if (defaultValues.profilePhoto) {
+            setProfilePhoto(defaultValues.profilePhoto);
+        }
+    }, [defaultValues, reset]);
 
     const { fields: experienceFields, append: appendExperience, remove: removeExperience } = useFieldArray({
         control,

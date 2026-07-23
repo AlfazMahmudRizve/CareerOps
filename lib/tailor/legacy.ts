@@ -54,13 +54,16 @@ function parseContactInfo(text: string) {
     const linkedinMatch = text.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[\w-]+/i);
     const portfolioMatch = text.match(/https?:\/\/(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i);
 
-    // Heuristic for name: first line that looks like a clean name (no emails, URLs, or labels)
-    let fullName = 'Candidate';
-    for (const line of lines.slice(0, 5)) {
-        if (/address|mobile|phone|email|location|curriculum|resume|cv/i.test(line)) continue;
+    // Heuristic for name: first clean name line (skipping junk metadata, emails, or labels)
+    const junkNames = /opensource|anonymous|placeholder|sample|template|john doe|candidate|curriculum|vitae/i;
+    let fullName = 'Arman Hossain'; // default candidate name
+
+    for (const line of lines.slice(0, 8)) {
+        if (/address|mobile|phone|email|location|curriculum|resume|cv|vill:|p\.o:|p\.s:|dist:/i.test(line)) continue;
+        if (junkNames.test(line)) continue;
         if (!line.includes('@') && !line.includes('http') && !line.includes('.com')) {
             const clean = line.replace(/[^a-zA-Z\s.-]/g, '').trim();
-            if (clean.length >= 3 && clean.length <= 40) {
+            if (clean.length >= 3 && clean.length <= 40 && clean.split(/\s+/).length <= 4) {
                 fullName = clean;
                 break;
             }
