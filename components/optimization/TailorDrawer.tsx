@@ -43,36 +43,46 @@ export interface TailorDrawerProps {
   originalScore?: number;
 }
 
-function formatPayloadToResumeData(data: TailoredResumePayload): ResumeData {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatPayloadToResumeData(data: any): ResumeData {
+  const skillsStr = typeof data.skills === 'string'
+    ? data.skills
+    : data.skills
+      ? [...(data.skills.technical || []), ...(data.skills.tools || []), ...(data.skills.soft || [])].join(', ')
+      : '';
+
   return {
-    fullName: data.fullName || '',
-    email: data.email || '',
-    phone: data.phone || '',
-    linkedin: data.linkedin || '',
-    portfolio: data.portfolio || '',
+    fullName: data.personal?.fullName || data.fullName || '',
+    email: data.personal?.email || data.email || '',
+    phone: data.personal?.phone || data.phone || '',
+    linkedin: data.personal?.linkedin || data.linkedin || '',
+    portfolio: data.personal?.portfolio || data.portfolio || '',
     summary: data.summary || '',
-    experience: (data.experience || []).map((exp) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    experience: (data.experience || []).map((exp: any) => ({
       company: exp.company || '',
       role: exp.role || '',
       startDate: exp.startDate || '',
       endDate: exp.endDate || '',
-      description: exp.description || '',
+      description: Array.isArray(exp.bullets) ? exp.bullets.join('\n') : (exp.description || ''),
     })),
-    education: (data.education || []).map((edu) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    education: (data.education || []).map((edu: any) => ({
       school: edu.school || '',
       degree: edu.degree || '',
       startDate: edu.startDate || '',
       endDate: edu.endDate || '',
-      description: edu.description || '',
+      description: edu.details || edu.description || '',
     })),
-    projects: (data.projects || []).map((proj) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    projects: (data.projects || []).map((proj: any) => ({
       title: proj.title || '',
       techStack: proj.techStack || '',
       link: proj.link || '',
-      description: proj.description || '',
+      description: Array.isArray(proj.bullets) ? proj.bullets.join('\n') : (proj.description || ''),
     })),
     certifications: [],
-    skills: data.skills || '',
+    skills: skillsStr,
   };
 }
 

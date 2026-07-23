@@ -10,10 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import dynamic from 'next/dynamic';
 import { parsePdfFile } from '@/lib/pdf-parser';
-import type { TailoredResumePayload } from '@/lib/tailor/legacy';
+import type { TopGradeTailoredPayload } from '@/lib/tailor/top-grade';
 
-const TailorDrawer = dynamic(
-    () => import('@/components/optimization/TailorDrawer').then((mod) => mod.TailorDrawer),
+const TailorWorkspaceModal = dynamic(
+    () => import('@/components/optimization/TailorWorkspaceModal').then((mod) => mod.TailorWorkspaceModal),
     { ssr: false }
 );
 
@@ -27,7 +27,7 @@ export default function OptimizePage() {
     // AI Tailor State
     const [isTailorOpen, setIsTailorOpen] = useState(false);
     const [isTailoring, setIsTailoring] = useState(false);
-    const [tailoredData, setTailoredData] = useState<TailoredResumePayload | null>(null);
+    const [tailoredData, setTailoredData] = useState<TopGradeTailoredPayload | null>(null);
 
     const jdWordCount = jdText.trim() ? jdText.trim().split(/\s+/).length : 0;
 
@@ -227,8 +227,8 @@ export default function OptimizePage() {
                 </div>
             </div>
 
-            {/* AI Tailor Slide-over Drawer */}
-            <TailorDrawer
+            {/* Top-Grade AI Tailor Side-by-Side Review Workspace Modal */}
+            <TailorWorkspaceModal
                 isOpen={isTailorOpen}
                 onClose={() => setIsTailorOpen(false)}
                 data={tailoredData}
