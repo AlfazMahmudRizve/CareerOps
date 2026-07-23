@@ -21,7 +21,7 @@ const badgeVariants = {
     }),
 };
 
-export default function ResultsDashboard({ data }: { data: any }) { // eslint-disable-line @typescript-eslint/no-explicit-any
+export default function ResultsDashboard({ data, onTailor }: { data: any; onTailor?: () => void }) { // eslint-disable-line @typescript-eslint/no-explicit-any
     const score = data?.matchScore || 0;
     const missing = data?.missingKeywords || [];
     const [copied, setCopied] = useState(false);
@@ -152,7 +152,21 @@ export default function ResultsDashboard({ data }: { data: any }) { // eslint-di
                             {shared ? 'Copied!' : 'LinkedIn Share'}
                         </motion.button>
                     </div>
-                    <p className="text-zinc-300 leading-relaxed">{data.feedback}</p>
+                    <p className="text-zinc-300 leading-relaxed mb-4">{data.feedback}</p>
+                    
+                    {onTailor && (
+                        <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between flex-wrap gap-3">
+                            <span className="text-xs text-zinc-400">Ready to boost your ATS match score?</span>
+                            <motion.button
+                                onClick={onTailor}
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 text-black font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all flex items-center gap-1.5 cursor-pointer"
+                            >
+                                ✨ Tailor Resume with AI
+                            </motion.button>
+                        </div>
+                    )}
                 </motion.div>
             </div>
 

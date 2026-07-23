@@ -8,7 +8,14 @@ import { cn } from '@/lib/utils';
 import { Sparkles, Loader2, FileSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import dynamic from 'next/dynamic';
 import { parsePdfFile } from '@/lib/pdf-parser';
+import type { TailoredResumePayload } from '@/lib/tailor/legacy';
+
+const TailorDrawer = dynamic(
+    () => import('@/components/optimization/TailorDrawer').then((mod) => mod.TailorDrawer),
+    { ssr: false }
+);
 
 export default function OptimizePage() {
     const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -17,7 +24,45 @@ export default function OptimizePage() {
     const [processingState, setProcessingState] = useState('');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    // AI Tailor State
+    const [isTailorOpen, setIsTailorOpen] = useState(false);
+    const [isTailoring, setIsTailoring] = useState(false);
+    const [tailoredData, setTailoredData] = useState<TailoredResumePayload | null>(null);
+
     const jdWordCount = jdText.trim() ? jdText.trim().split(/\s+/).length : 0;
+
+    const handleTailor = async () => {
+        if (!resumeFile || !jdText) return;
+        setIsTailorOpen(true);
+        setIsTailoring(true);
+        setErrorMsg(null);
+
+        try {
+            const resumeText = await parsePdfFile(resumeFile);
+            const res = await fetch('/api/tailor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    resumeText,
+                    jdText,
+                    missingKeywords: result?.missingKeywords || [],
+                }),
+            });
+
+            if (!res.ok) {
+                const errJson = await res.json().catch(() => ({}));
+                throw new Error(errJson.error || 'Tailoring failed');
+            }
+
+            const tailored = await res.json();
+            setTailoredData(tailored);
+        } catch (err) {
+            console.error(err);
+            setErrorMsg(`Tailoring Error: ${err instanceof Error ? err.message : String(err)}`);
+        } finally {
+            setIsTailoring(false);
+        }
+    };
 
     const handleRun = async () => {
         if (!resumeFile || !jdText) return;
@@ -165,7 +210,7 @@ export default function OptimizePage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                             >
-                                <ResultsDashboard data={result} />
+                                <ResultsDashboard data={result} onTailor={handleTailor} />
                             </motion.div>
                         ) : (
                             <motion.div 
@@ -181,6 +226,15 @@ export default function OptimizePage() {
                     </AnimatePresence>
                 </div>
             </div>
+
+            {/* AI Tailor Slide-over Drawer */}
+            <TailorDrawer
+                isOpen={isTailorOpen}
+                onClose={() => setIsTailorOpen(false)}
+                data={tailoredData}
+                isLoading={isTailoring}
+                originalScore={result?.matchScore}
+            />
         </div>
     );
 }

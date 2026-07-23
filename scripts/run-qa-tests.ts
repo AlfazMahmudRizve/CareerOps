@@ -1,4 +1,5 @@
 import { analyzeLegacy } from '../lib/analyzer/legacy';
+import { tailorLegacy } from '../lib/tailor/legacy';
 import { checkRateLimit } from '../lib/ratelimit';
 import { assessInput, detectInjection, sanitizeOutput } from '../lib/guardrail';
 
@@ -124,6 +125,24 @@ async function runTests() {
     }
   }
   assert(rateLimitedAt === 31, `Rate limit triggered precisely on request #31 (30 req/min limit)`);
+
+  // ----------------------------------------------------
+  // SECTION 4: AI TAILOR ENGINE TESTS
+  // ----------------------------------------------------
+  console.log("\n4. AI Resume Tailor Unit Tests:");
+
+  try {
+    const resume = "Alfaz Mahmud\nalfaz@example.com\n\nExperience\nSoftware Engineer at TechCorp\nBuilt web applications using React and Node.js.\n\nSkills\nReact, JavaScript, HTML, CSS";
+    const jd = "Looking for a Senior Software Engineer with strong experience in Next.js, TypeScript, React, and GraphQL.";
+    const result = await tailorLegacy({ resumeText: resume, jdText: jd, missingKeywords: ["next.js", "typescript", "graphql"] });
+
+    assert(typeof result.projectedScore === 'number' && result.projectedScore > 70, `Calculates high projected score (${result.projectedScore}%)`);
+    assert(result.skills.toLowerCase().includes('next.js') || result.skills.toLowerCase().includes('typescript'), "Injects target keywords into skills list");
+    assert(result.integratedKeywords.length > 0, "Tracks integrated keywords list");
+    assert(typeof result.summary === 'string' && result.summary.length > 0, "Generates tailored summary");
+  } catch (err: any) {
+    assert(false, `Test 4.1 threw error: ${err.message}`);
+  }
 
   // ----------------------------------------------------
   // SUMMARY
