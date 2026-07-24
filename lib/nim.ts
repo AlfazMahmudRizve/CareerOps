@@ -42,8 +42,8 @@ type NimRawResponse = {
 };
 
 const DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1";
-const DEFAULT_MODEL = "meta/llama-3.1-70b-instruct";
-const DEFAULT_TIMEOUT_MS = 12_000;
+const DEFAULT_MODEL = "meta/llama-3.1-8b-instruct";
+const DEFAULT_TIMEOUT_MS = 45_000;
 
 /**
  * Combine a caller-provided AbortSignal with our internal timeout signal,
