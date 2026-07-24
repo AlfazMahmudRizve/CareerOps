@@ -365,7 +365,7 @@ export async function tailorWithNim(input: TailorInput): Promise<TopGradeTailore
             { role: 'user', content: userPrompt },
         ],
         {
-            model: process.env.NVIDIA_NIM_MODEL || 'meta/llama-3.1-8b-instruct',
+            model: process.env.NVIDIA_NIM_TAILOR_MODEL || 'meta/llama-3.1-8b-instruct',
             temperature: 0.2,
             topP: 0.7,
             maxTokens: 3072,
