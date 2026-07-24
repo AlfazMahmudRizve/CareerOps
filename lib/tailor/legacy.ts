@@ -56,7 +56,7 @@ function parseContactInfo(text: string) {
 
     // Heuristic for name: first clean name line (skipping junk metadata, emails, or labels)
     const junkNames = /opensource|anonymous|placeholder|sample|template|john doe|candidate|curriculum|vitae/i;
-    let fullName = 'Arman Hossain'; // default candidate name
+    let fullName = 'Candidate';
 
     for (const line of lines.slice(0, 8)) {
         if (/address|mobile|phone|email|location|curriculum|resume|cv|vill:|p\.o:|p\.s:|dist:/i.test(line)) continue;

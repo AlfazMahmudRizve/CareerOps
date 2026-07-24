@@ -27,13 +27,16 @@ export function extractRawTextFromArrayBuffer(arrayBuffer: ArrayBuffer): string 
 
     while ((match = parenRegex.exec(binaryString)) !== null) {
       const raw = match[1];
-      // Filter out non-printable binary streams or PDF font mapping noise
+      // Filter out non-printable binary streams, PDF font mapping noise, and PDF metadata strings
       if (/^[\x20-\x7E\s]+$/.test(raw)) {
         const cleaned = raw
           .replace(/\\([()\\])/g, '$1')
           .replace(/\\r|\\n|\\t/g, ' ')
           .trim();
-        if (cleaned.length > 2) {
+        if (
+          cleaned.length > 2 &&
+          !/opensource|anonymous|producer|creator|metadata|xml|font|subsystem|adobe/i.test(cleaned)
+        ) {
           textPieces.push(cleaned);
         }
       }

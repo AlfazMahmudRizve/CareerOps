@@ -29,8 +29,15 @@ export async function POST(req: NextRequest) {
         const emailMatch = fullText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
         const email = emailMatch ? emailMatch[0] : '';
 
-        const phoneMatch = fullText.match(/(?:\+?\d{1,4}[\s.-]?)?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,5}/);
-        const phone = phoneMatch ? phoneMatch[0] : '';
+        // Exclude NID numbers when searching for phone numbers
+        const cleanPhoneText = lines
+            .filter((line: string) => !/NID|National ID/i.test(line))
+            .join(' ');
+
+        const phoneMatch = cleanPhoneText.match(/(?:Mobile|Phone|Tel|Cell):\s*([+\d\s-]{10,20})/i) ||
+            cleanPhoneText.match(/(?:\+880|01)[0-9\s-]{9,14}/) ||
+            cleanPhoneText.match(/(?:\+?\d{1,4}[\s.-]?)?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,5}/);
+        const phone = phoneMatch ? phoneMatch[1] || phoneMatch[0] : '';
 
         const linkedinMatch = fullText.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+\/?/i);
         const linkedin = linkedinMatch ? linkedinMatch[0] : '';
@@ -43,9 +50,12 @@ export async function POST(req: NextRequest) {
         // ==========================================
         // 3. Name Extraction (first non-contact line)
         // ==========================================
+        const junkNames = /opensource|anonymous|placeholder|sample|template|john doe|candidate|curriculum|vitae|producer|creator|metadata/i;
         let fullName = '';
-        for (let i = 0; i < Math.min(5, lines.length); i++) {
+        for (let i = 0; i < Math.min(8, lines.length); i++) {
             const line = lines[i];
+            if (junkNames.test(line)) continue;
+            if (/address|mobile|phone|email|location|curriculum|resume|cv|vill:|p\.o:|p\.s:|dist:|objective/i.test(line)) continue;
             if (
                 line.length > 2 && line.length < 50 &&
                 !/\d{3}/.test(line) &&              // No phone-like numbers
@@ -55,8 +65,11 @@ export async function POST(req: NextRequest) {
                 !line.includes('.me') &&
                 !line.includes('linkedin')
             ) {
-                fullName = line;
-                break;
+                const clean = line.replace(/[^a-zA-Z\s.-]/g, '').trim();
+                if (clean.length >= 3 && clean.length <= 40) {
+                    fullName = clean;
+                    break;
+                }
             }
         }
 
