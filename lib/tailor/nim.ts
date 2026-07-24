@@ -90,7 +90,7 @@ function validateTailorSchema(value: unknown): TopGradeTailoredPayload | null {
                 }
 
                 if (bullets.length === 0) {
-                    bullets = ['Delivered software development objectives across core engineering projects.'];
+                    bullets = ['Delivered key operational objectives and contributed to team results.'];
                 }
 
                 // Parse originalBullets array
