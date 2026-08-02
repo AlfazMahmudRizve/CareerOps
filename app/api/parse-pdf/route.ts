@@ -5,16 +5,27 @@ export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
 /**
- * Linear O(N) stream text extractor for PDF Buffers.
- * Scans parenthetical text strings (text) Tj / [(text)] TJ and hex text <hex> Tj
- * without nested regex quantifiers, guaranteeing 0 ReDoS.
+ * Safely load @firecrawl/pdf-inspector without triggering Next.js Webpack binary loader errors.
+ */
+function getPdfInspector() {
+  try {
+    // eslint-disable-next-line no-eval
+    const req = eval('require');
+    return req('@firecrawl/pdf-inspector');
+  } catch (err) {
+    console.warn('[parse-pdf] Failed to require @firecrawl/pdf-inspector:', err);
+    return null;
+  }
+}
+
+/**
+ * Linear O(N) stream text extractor for PDF Buffers fallback.
  */
 function extractRawPdfText(buffer: Buffer): string {
   try {
     const binaryString = buffer.toString('latin1');
     const textPieces: string[] = [];
 
-    // Linear O(N) extraction of parenthetical strings: (Hello World)
     const parenRegex = /\(([^()]{2,500})\)/g;
     let match: RegExpExecArray | null;
 
@@ -25,79 +36,20 @@ function extractRawPdfText(buffer: Buffer): string {
           .replace(/\\([()\\])/g, '$1')
           .replace(/\\r|\\n|\\t/g, ' ')
           .trim();
-        if (cleaned.length > 2) {
+        if (
+          cleaned.length > 2 &&
+          !/opensource|anonymous|producer|creator|metadata|xml|font|subsystem|adobe/i.test(cleaned)
+        ) {
           textPieces.push(cleaned);
         }
       }
     }
 
-    // Linear O(N) extraction of hex-encoded text: <48656c6c6f>
-    const hexRegex = /<([0-9a-fA-F]{4,1000})>/g;
-    while ((match = hexRegex.exec(binaryString)) !== null) {
-      const hex = match[1];
-      if (hex.length % 2 === 0) {
-        try {
-          const decoded = Buffer.from(hex, 'hex').toString('utf8').trim();
-          if (decoded.length > 2 && /^[\x20-\x7E\s]+$/.test(decoded)) {
-            textPieces.push(decoded);
-          }
-        } catch {
-          // ignore hex decode errors
-        }
-      }
-    }
-
-    const result = textPieces.join(' ').replace(/\s+/g, ' ').trim();
-    return result;
+    return textPieces.join(' ').replace(/\s+/g, ' ').trim();
   } catch (err) {
     console.error('Raw PDF fallback extraction failed:', err);
     return '';
   }
-}
-
-/**
- * Execute pdf-parse with a strict 3-second timeout to prevent serverless hanging.
- */
-async function parsePdfWithTimeout(buffer: Buffer, timeoutMs = 3000): Promise<string> {
-  return new Promise((resolve) => {
-    let completed = false;
-
-    const timer = setTimeout(() => {
-      if (!completed) {
-        completed = true;
-        console.warn(`[parse-pdf] pdf-parse exceeded ${timeoutMs}ms limit, cancelling.`);
-        resolve('');
-      }
-    }, timeoutMs);
-
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require('pdf-parse');
-      pdfParse(buffer)
-        .then((data: { text?: string }) => {
-          if (!completed) {
-            completed = true;
-            clearTimeout(timer);
-            resolve(data?.text || '');
-          }
-        })
-        .catch((err: unknown) => {
-          if (!completed) {
-            completed = true;
-            clearTimeout(timer);
-            console.warn('[parse-pdf] pdf-parse thrown:', err);
-            resolve('');
-          }
-        });
-    } catch (err) {
-      if (!completed) {
-        completed = true;
-        clearTimeout(timer);
-        console.warn('[parse-pdf] require(pdf-parse) failed:', err);
-        resolve('');
-      }
-    }
-  });
 }
 
 export async function POST(req: NextRequest) {
@@ -109,20 +61,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // 1. Convert file to Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 2. Primary Strategy: pdf-parse bounded by a 3-second timeout
-    let extractedText = await parsePdfWithTimeout(buffer, 3000);
+    let extractedText = '';
 
-    // 3. Secondary Strategy: Instant raw stream text extraction fallback
-    if (!extractedText || extractedText.trim().length < 15) {
-      console.log('[parse-pdf] Trying fast raw stream PDF text extraction fallback...');
-      const fallbackText = extractRawPdfText(buffer);
-      if (fallbackText && fallbackText.length > extractedText.length) {
-        extractedText = fallbackText;
+    // 1. Primary Strategy: Rust-powered @firecrawl/pdf-inspector (<2ms execution)
+    const pdfInspector = getPdfInspector();
+    if (pdfInspector) {
+      try {
+        const inspectRes = pdfInspector.processPdf(buffer);
+        if (inspectRes && inspectRes.markdown && inspectRes.markdown.trim().length >= 10) {
+          extractedText = inspectRes.markdown.trim();
+        } else if (typeof pdfInspector.extractText === 'function') {
+          extractedText = pdfInspector.extractText(buffer).trim();
+        }
+      } catch (err) {
+        console.warn('[parse-pdf] @firecrawl/pdf-inspector execution failed:', err);
       }
+    }
+
+    // 2. Secondary Strategy: pdf-parse fallback
+    if (!extractedText || extractedText.length < 15) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, no-eval
+        const pdfParse = eval('require')('pdf-parse');
+        const data = await pdfParse(buffer);
+        if (data && data.text && data.text.trim().length >= 15) {
+          extractedText = data.text.trim();
+        }
+      } catch (err) {
+        console.warn('[parse-pdf] pdf-parse fallback failed:', err);
+      }
+    }
+
+    // 3. Tertiary Strategy: Raw stream text extraction fallback
+    if (!extractedText || extractedText.length < 15) {
+      console.log('[parse-pdf] Trying raw stream text extraction fallback...');
+      extractedText = extractRawPdfText(buffer);
     }
 
     if (!extractedText || extractedText.trim().length === 0) {
