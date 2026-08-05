@@ -4,6 +4,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import remarkGfm from 'remark-gfm';
 
 export async function generateStaticParams() {
   const posts = getPosts();
@@ -51,6 +52,22 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+// Custom styled MDX components for tables and callouts
+const mdxComponents = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  table: (props: any) => (
+    <div className="overflow-x-auto my-8 rounded-2xl border border-white/10 bg-zinc-900/60 p-2 backdrop-blur-xl">
+      <table className="w-full text-left text-sm text-zinc-300" {...props} />
+    </div>
+  ),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  thead: (props: any) => <thead className="border-b border-white/10 bg-zinc-900/80 text-xs font-semibold uppercase tracking-wider text-emerald-400" {...props} />,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  th: (props: any) => <th className="py-3.5 px-4 font-bold text-emerald-400" {...props} />,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  td: (props: any) => <td className="py-3 px-4 border-b border-white/5" {...props} />,
+};
+
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = getPostBySlug(params.slug);
 
@@ -83,7 +100,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   };
 
   return (
-    <article className="max-w-3xl mx-auto py-20 px-6">
+    <article className="max-w-4xl mx-auto py-20 px-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -115,7 +132,16 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       </div>
 
       <div className="prose prose-invert prose-emerald max-w-none prose-headings:font-bold prose-a:text-emerald-400 hover:prose-a:text-emerald-300 prose-img:rounded-xl">
-        <MDXRemote source={post.content} />
+        <MDXRemote
+          source={post.content}
+          components={mdxComponents}
+          options={{
+            mdxOptions: {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              remarkPlugins: [remarkGfm as any],
+            },
+          }}
+        />
       </div>
 
       <div className="mt-16 pt-8 border-t border-zinc-800">
