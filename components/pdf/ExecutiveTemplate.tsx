@@ -210,23 +210,21 @@ export const ExecutiveTemplate = ({ data }: { data: ResumeData }) => {
                                 {/* Row 1: Job Title - Date */}
                                 <View style={styles.row1}>
                                     <Text style={styles.jobTitle}>{exp.role}</Text>
-                                    <Text style={styles.dateRange}>{exp.startDate} - {exp.endDate}</Text>
+                                    {(exp.startDate || exp.endDate) ? (
+                                        <Text style={styles.dateRange}>
+                                            {exp.startDate}{exp.startDate && exp.endDate ? ' – ' : ''}{exp.endDate}
+                                        </Text>
+                                    ) : null}
                                 </View>
-                                {/* Row 2: Company - Location */}
-                                <View style={styles.row2}>
-                                    <Text style={styles.companyName}>{exp.company}</Text>
-                                    <Text style={styles.location}>Remote / On-site</Text> {/* Placeholder location */}
-                                </View>
+                                {/* Row 2: Company */}
+                                {exp.company ? (
+                                    <View style={styles.row2}>
+                                        <Text style={styles.companyName}>{exp.company}</Text>
+                                    </View>
+                                ) : null}
                                 {/* Description / Bullets */}
                                 {exp.description ? (
                                     <View>
-                                        {/* Split by newlines or periods for bullets? User asked for "Lists: Create a bullet point style" */}
-                                        {/* If description is a big block, we might just wrap it. 
-                                            But best practice for "Executive" is bullets. 
-                                            Let's try to split by newline if possible, or just render it. 
-                                            If it's a single string, we can just bullet the whole thing or leave it plain.
-                                            Let's assume it might contain newlines.
-                                        */}
                                         {exp.description.split('\n').map((line, idx) => (
                                             line.trim() && <BulletPoint key={idx}>{line.trim()}</BulletPoint>
                                         ))}
@@ -245,12 +243,12 @@ export const ExecutiveTemplate = ({ data }: { data: ResumeData }) => {
                         </View>
                         {data.education.map((edu, i) => (
                             <View key={i} style={{ marginBottom: 6 }}>
-                                {/* Format: MBA in Lorem - 2018 | North South University | CGPA: 3.50 */}
-                                {/* We'll approximate this single line format or compact rows */}
                                 <Text style={{ fontSize: 10 }}>
-                                    <Text style={{ fontWeight: 'bold' }}>{edu.degree}</Text>
-                                    <Text> | {edu.school}</Text>
-                                    <Text> | {edu.startDate} - {edu.endDate}</Text>
+                                    {edu.degree ? <Text style={{ fontWeight: 'bold' }}>{edu.degree}</Text> : null}
+                                    {edu.school ? <Text>{edu.degree ? ' | ' : ''}{edu.school}</Text> : null}
+                                    {(edu.startDate || edu.endDate) ? (
+                                        <Text> | {edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}</Text>
+                                    ) : null}
                                 </Text>
                                 {edu.description ? <Text style={{ fontSize: 9, marginTop: 2, color: '#444' }}>{edu.description}</Text> : null}
                             </View>

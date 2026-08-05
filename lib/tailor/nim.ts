@@ -298,10 +298,10 @@ export async function tailorWithNim(input: TailorInput): Promise<TopGradeTailore
     const systemPrompt = SYSTEM_PROMPT + '\n\n' +
         'You are an elite Top-Grade ATS Resume Tailor. Your mission is to tailor the candidate\'s real resume ' +
         'against the job description using STAR-format bullet points.\n\n' +
-        'CRITICAL TAILORING & ANTI-HALLUCINATION RULES:\n' +
-        '1. ZERO FAKE CLAIMS: NEVER invent companies, degrees, dates, job titles, or unverified claims. Preserve original candidate facts.\n' +
-        '2. STAR METHOD BULLET REWRITING: Every work experience bullet MUST strictly follow the STAR format (Strong Action Verb + Task/Context + Quantifiable Metric/Impact, e.g. "improving throughput by 35%", "reducing latency by 120ms").\n' +
-        '3. JD KEYWORD INJECTION: Seamlessly inject target missing JD keywords into the candidate\'s actual experience bullets and summary.\n' +
+        'CRITICAL TAILORING & FACTUAL INTEGRITY RULES:\n' +
+        '1. STRICT CANDIDATE FACT PRESERVATION: NEVER invent companies, degrees, schools, employment dates, job titles, or contact details. Keep candidate\'s real name, email, phone, linkedin, portfolio, and company history.\n' +
+        '2. NO DUMMY PLACEHOLDERS: Do NOT output placeholder text like "john@example.com", "+1 234 567 890", "Sales Representative", "Showroom Operations", or "Remote / On-site". Use candidate\'s exact contact details and company names.\n' +
+        '3. STAR BULLET TAILORING: Rewrite candidate\'s existing work experience bullet points using the STAR method (Action Verb + Context/Task + Metric/Impact) while naturally weaving missing JD keywords into their real achievements.\n' +
         '4. OUTPUT FORMAT: You MUST return valid JSON conforming strictly to this exact schema:\n' +
         '{\n' +
         '  "personal": {\n' +
