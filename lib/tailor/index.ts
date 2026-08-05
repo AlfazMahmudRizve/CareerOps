@@ -1,41 +1,51 @@
 import { tailorTopGradeLegacy, type TopGradeTailoredPayload } from './top-grade';
 import { tailorWithNim } from './nim';
+import { tailorWithGroq } from './groq';
 import type { TailorInput } from './legacy';
 
 export type { TailorInput, TopGradeTailoredPayload };
 export type TailoredResumePayload = TopGradeTailoredPayload;
 
-export type TailorBackend = 'legacy' | 'nim';
-
-const DEFAULT_BACKEND: TailorBackend = 'legacy';
+export type TailorBackend = 'legacy' | 'nim' | 'groq';
 
 /**
  * Dispatcher for the top-grade AI resume tailor engine.
- * Calls tailorWithNim when `ANALYZER_BACKEND=nim`, falling back automatically
- * to `tailorTopGradeLegacy` if NIM is unreachable, times out, or fails schema validation.
+ * Prioritizes Groq LPU when `GROQ_API_KEY` or `ANALYZER_BACKEND=groq` is set,
+ * falling back automatically to NIM and legacy top-grade tailor.
  */
 export async function tailor(input: TailorInput): Promise<TopGradeTailoredPayload> {
-    const raw = (process.env.ANALYZER_BACKEND ?? DEFAULT_BACKEND).toLowerCase();
-    const backend: TailorBackend = raw === 'nim' ? 'nim' : 'legacy';
+    const raw = (process.env.ANALYZER_BACKEND ?? '').toLowerCase();
+    const hasGroq = Boolean(process.env.GROQ_API_KEY) || raw === 'groq';
+    const hasNim = Boolean(process.env.NVIDIA_NIM_API_KEY) || raw === 'nim';
 
-    if (backend === 'nim') {
+    // 1. Try Groq LPU (sub-second fast inference)
+    if (hasGroq) {
+        try {
+            return await tailorWithGroq(input);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (msg.startsWith('GUARDRAIL_BLOCKED')) {
+                return tailorTopGradeLegacy(input);
+            }
+            console.warn('[tailor] groq failed, falling back:', msg);
+        }
+    }
+
+    // 2. Try NVIDIA NIM
+    if (hasNim) {
         try {
             return await tailorWithNim(input);
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             if (msg.startsWith('GUARDRAIL_BLOCKED')) {
-                // eslint-disable-next-line no-console
-                console.warn('[tailor] guardrail blocked input:', msg);
-                // Fall back to rule-based multi-section parsing on guardrail block
                 return tailorTopGradeLegacy(input);
             }
-            // eslint-disable-next-line no-console
             console.warn('[tailor] nim failed, falling back to legacy top-grade tailor:', msg);
-            return tailorTopGradeLegacy(input);
         }
     }
 
+    // 3. Rule-based top-grade fallback
     return tailorTopGradeLegacy(input);
 }
 
-export { tailorTopGradeLegacy, tailorWithNim };
+export { tailorTopGradeLegacy, tailorWithNim, tailorWithGroq };

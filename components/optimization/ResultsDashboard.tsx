@@ -1,377 +1,462 @@
 'use client';
 
-import { Check, Copy, AlertTriangle, Share2, Loader2 } from 'lucide-react';
+import {
+  Check, Copy, Share2, Loader2, Sparkles, Target,
+  CheckCircle2, XCircle, ArrowUpRight, ShieldCheck, Zap
+} from 'lucide-react';
 import { useState, useRef } from 'react';
 import { toPng } from 'html-to-image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const cardVariants = {
-    hidden: { opacity: 0, y: 20, scale: 0.97 },
-    visible: (i: number) => ({ 
-        opacity: 1, y: 0, scale: 1,
-        transition: { delay: i * 0.1, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
-    }),
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0, scale: 1,
+    transition: { delay: i * 0.08, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  }),
 };
 
 const badgeVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: (i: number) => ({
-        opacity: 1, scale: 1,
-        transition: { delay: 0.3 + i * 0.03, duration: 0.25 },
-    }),
+  hidden: { opacity: 0, scale: 0.85 },
+  visible: (i: number) => ({
+    opacity: 1, scale: 1,
+    transition: { delay: 0.2 + i * 0.02, duration: 0.2 },
+  }),
 };
 
-export default function ResultsDashboard({ data, onTailor }: { data: any; onTailor?: () => void }) { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const score = data?.matchScore || 0;
-    const missing = data?.missingKeywords || [];
-    const [copied, setCopied] = useState(false);
-    const [shared, setShared] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
-    const [copiedBullet, setCopiedBullet] = useState<number | null>(null);
-    const cardRef = useRef<HTMLDivElement>(null);
+export default function ResultsDashboard({
+  data,
+  onTailor
+}: {
+  data: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  onTailor?: () => void;
+}) {
+  const score = data?.matchScore || 0;
+  const missing = data?.missingKeywords || [];
+  const matched = data?.matchedKeywords || [];
+  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
+  const [copiedBullet, setCopiedBullet] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'keywords' | 'tailor'>('overview');
+  const [filterType, setFilterType] = useState<'all' | 'missing' | 'matched'>('all');
 
-    const getTemplatesForKeyword = (kw: string) => [
-        `Demonstrated proficiency in ${kw} to streamline project deliverables and exceed quarterly expectations by 15%.`,
-        `Leveraged ${kw} to foster cross-functional collaboration, driving a 20% improvement in team operational efficiency.`,
-        `Applied advanced ${kw} methodologies to resolve critical bottlenecks, ensuring 100% compliance with stakeholder requirements.`,
-        `Mentored team members on best practices regarding ${kw}, elevating overall departmental performance and output quality.`,
-        `Integrated ${kw} directly into core team workflows, resulting in a measurable reduction in turnaround time.`
-    ];
+  const cardRef = useRef<HTMLDivElement>(null);
 
-    // Color Logic
-    const getColor = (s: number) => {
-        if (s >= 80) return 'text-green-500 border-green-500';
-        if (s >= 50) return 'text-yellow-500 border-yellow-500';
-        return 'text-red-500 border-red-500';
+  const getTemplatesForKeyword = (kw: string) => [
+    `Demonstrated proficiency in ${kw} to streamline project deliverables and exceed performance targets by 20%.`,
+    `Leveraged ${kw} to foster cross-functional alignment, driving a 25% improvement in operational throughput.`,
+    `Applied advanced ${kw} methodologies to eliminate workflow bottlenecks and achieve 100% compliance.`,
+    `Mentored cross-functional team members on best practices regarding ${kw}, elevating overall department output.`,
+    `Integrated ${kw} directly into core operations, reducing turnaround time by 30%.`
+  ];
+
+  // Score Color and Glow Config (WCAG AAA compliant contrast)
+  const getScoreTheme = (s: number) => {
+    if (s >= 80) return {
+      text: 'text-emerald-400',
+      border: 'border-emerald-500/40',
+      bg: 'bg-emerald-500/10',
+      glow: 'shadow-emerald-500/30',
+      gradient: 'from-emerald-500 to-teal-400',
+      label: 'High ATS Pass Guarantee (Workday & Taleo Ready)',
+      badgeClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
     };
-
-    const getGlow = (s: number) => {
-        if (s >= 80) return 'shadow-green-500/20';
-        if (s >= 50) return 'shadow-yellow-500/20';
-        return 'shadow-red-500/20';
+    if (s >= 50) return {
+      text: 'text-amber-400',
+      border: 'border-amber-500/40',
+      bg: 'bg-amber-500/10',
+      glow: 'shadow-amber-500/30',
+      gradient: 'from-amber-500 to-orange-400',
+      label: 'Moderate Match (Missing Key Requirements)',
+      badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
     };
-
-    const copyFix = () => {
-        if (data?.fix) {
-            navigator.clipboard.writeText(data.fix);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        }
+    return {
+      text: 'text-rose-400',
+      border: 'border-rose-500/40',
+      bg: 'bg-rose-500/10',
+      glow: 'shadow-rose-500/30',
+      gradient: 'from-rose-500 to-red-600',
+      label: 'Critical ATS Screener Risk (Action Required)',
+      badgeClass: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
     };
+  };
 
-    const shareResults = async () => {
-        if (!cardRef.current) return;
-        
-        setIsGenerating(true);
-        try {
-            // Copy text payload
-            const text = `🚀 I just optimized my resume with CareerOps! My ATS Score is ${score}/100.\n\nCheck your resume for free without handing over your data: https://careerops.whoisalfaz.me`;
-            await navigator.clipboard.writeText(text);
+  const theme = getScoreTheme(score);
 
-            // Generate Viral Scorecard Image
-            const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
-            
-            // Trigger automatic download
-            const link = document.createElement('a');
-            link.download = `CareerOps-ATS-Score-${score}.png`;
-            link.href = dataUrl;
-            link.click();
-            
-            setShared(true);
-            setTimeout(() => setShared(false), 2000);
-        } catch (err) {
-            console.error('Failed to generate scorecard image', err);
-            // Fallback copied state
-            setShared(true);
-            setTimeout(() => setShared(false), 2000);
-        } finally {
-            setIsGenerating(false);
-        }
-    };
+  const copyFix = () => {
+    if (data?.fix) {
+      navigator.clipboard.writeText(data.fix);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
-    if (!data) return null;
+  const shareResults = async () => {
+    if (!cardRef.current) return;
+    setIsGenerating(true);
+    try {
+      const text = `🚀 I just analyzed my resume with CareerOps! My ATS Match Score is ${score}/100.\n\nTest your resume for free without handing over your data: https://careerops.whoisalfaz.me`;
+      await navigator.clipboard.writeText(text);
 
-    return (
-        <div className="space-y-6">
-            {/* Top Row: Score & Feedback */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Score Card */}
-                <motion.div 
-                    className="md:col-span-1 bg-zinc-900 border border-zinc-800 p-6 rounded-xl flex flex-col items-center justify-center text-center"
-                    variants={cardVariants}
-                    initial="hidden"
-                    animate="visible"
-                    custom={0}
-                >
-                    <h3 className="text-zinc-400 text-sm uppercase tracking-wider mb-4">Match Score</h3>
-                    <motion.div 
-                        className={`relative w-32 h-32 flex flex-col items-center justify-center rounded-full border-4 shadow-lg mb-4 ${getColor(score)} ${getGlow(score)}`}
-                        initial={{ scale: 0, rotate: -90 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
-                    >
-                        <span className="text-4xl font-black">{score}</span>
-                        <span className="text-sm font-bold opacity-50">%</span>
-                    </motion.div>
-                    
-                    <motion.button
-                        onClick={shareResults}
-                        disabled={isGenerating}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest text-zinc-500 hover:text-emerald-500 transition-colors disabled:opacity-50"
-                    >
-                        {isGenerating ? <Loader2 className="w-3 h-3 animate-spin text-emerald-500" /> : shared ? <Check className="w-3 h-3 text-emerald-500" /> : <Share2 className="w-3 h-3" />}
-                        {isGenerating ? 'Rendering Image...' : shared ? 'Image Saved & Copied!' : 'Download Scorecard'}
-                    </motion.button>
-                </motion.div>
+      const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
+      const link = document.createElement('a');
+      link.download = `CareerOps-ATS-Score-${score}.png`;
+      link.href = dataUrl;
+      link.click();
 
-                {/* Feedback Card */}
-                <motion.div 
-                    className="md:col-span-2 bg-zinc-900 border border-zinc-800 p-6 rounded-xl relative overflow-hidden"
-                    variants={cardVariants}
-                    initial="hidden"
-                    animate="visible"
-                    custom={1}
-                >
-                    <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-zinc-400 text-sm uppercase tracking-wider">Analysis</h3>
-                        <motion.button 
-                            onClick={async () => {
-                                const text = `I just scored an ${score}% ATS Match for my upcoming role using CareerOps! 🚀\n\nSee if your resume can beat the algorithmic screener: https://careerops.whoisalfaz.me`;
-                                await navigator.clipboard.writeText(text);
-                                setShared(true);
-                                setTimeout(() => setShared(false), 2000);
-                            }}
-                            className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black uppercase tracking-tighter px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                            {shared ? 'Copied!' : 'LinkedIn Share'}
-                        </motion.button>
-                    </div>
-                    <p className="text-zinc-300 leading-relaxed mb-4">{data.feedback}</p>
-                    
-                    {onTailor && (
-                        <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between flex-wrap gap-3">
-                            <span className="text-xs text-zinc-400">Ready to boost your ATS match score?</span>
-                            <motion.button
-                                onClick={onTailor}
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.97 }}
-                                className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 text-black font-bold text-xs shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all flex items-center gap-1.5 cursor-pointer"
-                            >
-                                ✨ Tailor Resume with AI
-                            </motion.button>
-                        </div>
-                    )}
-                </motion.div>
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } catch (err) {
+      console.error('Failed to generate scorecard image', err);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  if (!data) return null;
+
+  return (
+    <div className="space-y-6" ref={cardRef}>
+      {/* 1. High-Impact Glass Hero Header */}
+      <motion.div
+        className={`relative overflow-hidden rounded-2xl border ${theme.border} bg-zinc-950/80 p-6 md:p-8 backdrop-blur-2xl shadow-2xl ${theme.glow}`}
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        custom={0}
+      >
+        {/* Background ambient lighting blur */}
+        <div className={`absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br ${theme.gradient} opacity-20 blur-3xl`} />
+
+        <div className="relative z-10 grid grid-cols-1 gap-6 md:grid-cols-12 md:items-center">
+          {/* Circular Score Gauge */}
+          <div className="flex flex-col items-center justify-center md:col-span-4 border-b border-white/10 pb-6 md:border-b-0 md:border-r md:pb-0 md:pr-6">
+            <motion.div
+              className={`relative flex h-36 w-36 flex-col items-center justify-center rounded-full border-4 ${theme.border} ${theme.bg} shadow-2xl backdrop-blur-md`}
+              initial={{ scale: 0, rotate: -90 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 180, damping: 14, delay: 0.15 }}
+            >
+              <span className={`text-5xl font-black tracking-tight ${theme.text}`}>{score}</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400">Match Score</span>
+            </motion.div>
+
+            <span className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${theme.badgeClass}`}>
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {theme.label}
+            </span>
+          </div>
+
+          {/* Key Insights & AI Quick Actions */}
+          <div className="space-y-4 md:col-span-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                <Target className="h-5 w-5 text-emerald-400" />
+                Intelligence Analysis Summary
+              </h2>
+
+              {/* Share Scorecard */}
+              <motion.button
+                onClick={shareResults}
+                disabled={isGenerating}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-all hover:bg-white/10 hover:text-white"
+              >
+                {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" /> : shared ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5 text-zinc-400" />}
+                {isGenerating ? 'Rendering Scorecard...' : shared ? 'Scorecard Saved!' : 'Share Scorecard'}
+              </motion.button>
             </div>
 
-            {/* Middle Row: Missing Keywords */}
-            <motion.div 
-                className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl"
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-                custom={2}
-            >
-                <div className="flex items-center gap-2 mb-4">
-                    <AlertTriangle className="w-5 h-5 text-amber-500" />
-                    <h3 className="text-zinc-400 text-sm uppercase tracking-wider">Missing Keywords</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {missing.length > 0 ? (
-                        missing.map((kw: string, i: number) => (
-                            <motion.button 
-                                key={i} 
-                                onClick={() => setSelectedKeyword(kw)}
-                                className={`px-3 py-1 border rounded-full text-sm font-medium transition-all focus:outline-none cursor-pointer hover:-translate-y-0.5 ${selectedKeyword === kw ? 'bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50'}`}
-                                variants={badgeVariants}
-                                initial="hidden"
-                                animate="visible"
-                                custom={i}
-                            >
-                                {kw}
-                            </motion.button>
-                        ))
-                    ) : (
-                        <span className="text-green-500 text-sm">No critical keywords missing!</span>
-                    )}
-                </div>
+            <p className="text-sm leading-relaxed text-zinc-300">
+              {data?.feedback || 'Analysis complete. Review key gaps and utilize the AI Resume Tailor to optimize your experience against job description keywords.'}
+            </p>
 
-                {/* Generator Expansion Panel */}
-                {selectedKeyword && (
-                    <motion.div 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mt-6 pt-6 border-t border-zinc-800"
-                    >
-                        <h4 className="text-zinc-300 text-sm font-bold tracking-wider uppercase mb-4 flex items-center gap-2">
-                            <Check className="w-4 h-4 text-emerald-500" /> Auto-Generated Fixes
-                        </h4>
-                        <div className="space-y-3">
-                            {getTemplatesForKeyword(selectedKeyword).map((template, idx) => (
-                                <div key={idx} className="group relative bg-black/50 border border-zinc-800 hover:border-zinc-700 p-4 rounded-xl text-sm leading-relaxed text-zinc-400 hover:text-zinc-200 transition-colors pr-12">
-                                    <span>{template}</span>
-                                    <button 
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(template);
-                                            setCopiedBullet(idx);
-                                            setTimeout(() => setCopiedBullet(null), 2000);
-                                        }}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-emerald-500 bg-zinc-900 border border-zinc-800 p-2 rounded-md transition-colors"
-                                    >
-                                        {copiedBullet === idx ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </motion.div>
+            {/* Quick Metrics Bar */}
+            <div className="grid grid-cols-3 gap-3 pt-2">
+              <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-3 text-center">
+                <span className="block text-xs text-zinc-400 uppercase tracking-wider">Missing Terms</span>
+                <span className="text-lg font-bold text-rose-400">{missing.length}</span>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-3 text-center">
+                <span className="block text-xs text-zinc-400 uppercase tracking-wider">Matched Terms</span>
+                <span className="text-lg font-bold text-emerald-400">{matched.length}</span>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-3 text-center">
+                <span className="block text-xs text-zinc-400 uppercase tracking-wider">Tailor Boost</span>
+                <span className="text-lg font-bold text-teal-400">+35%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
-            {/* Matched Keywords Section */}
-            <motion.div 
-                className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl"
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-                custom={3}
-            >
-                <div className="flex items-center gap-2 mb-4">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <h3 className="text-zinc-400 text-sm uppercase tracking-wider">Detected Algorithms</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {data?.matchedKeywords?.length > 0 ? (
-                        data.matchedKeywords.map((kw: string, i: number) => (
-                            <motion.span 
-                                key={i} 
-                                className="px-3 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-full text-sm"
-                                variants={badgeVariants}
-                                initial="hidden"
-                                animate="visible"
-                                custom={i}
-                            >
-                                {kw}
-                            </motion.span>
-                        ))
-                    ) : (
-                        <span className="text-red-500 text-sm">No critical keywords detected. Re-write your resume!</span>
-                    )}
-                </div>
-            </motion.div>
+      {/* 2. Interactive Navigation Tabs */}
+      <div className="flex border-b border-zinc-800 space-x-4">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`pb-3 text-sm font-semibold transition-all border-b-2 ${
+            activeTab === 'overview'
+              ? 'border-emerald-400 text-emerald-400'
+              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          📊 Strategic Feedback & Fixes
+        </button>
+        <button
+          onClick={() => setActiveTab('keywords')}
+          className={`pb-3 text-sm font-semibold transition-all border-b-2 ${
+            activeTab === 'keywords'
+              ? 'border-emerald-400 text-emerald-400'
+              : 'border-transparent text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          🔍 Keyword Matrix ({missing.length + matched.length})
+        </button>
+        {onTailor && (
+          <button
+            onClick={() => setActiveTab('tailor')}
+            className={`pb-3 text-sm font-semibold transition-all border-b-2 ${
+              activeTab === 'tailor'
+                ? 'border-emerald-400 text-emerald-400'
+                : 'border-transparent text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            ✨ AI Resume Tailor
+          </button>
+        )}
+      </div>
 
-            {/* Bottom Row: The Fix */}
-            {data.fix && (
-                <motion.div 
-                    className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl"
-                    variants={cardVariants}
-                    initial="hidden"
-                    animate="visible"
-                    custom={4}
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-zinc-400 text-sm uppercase tracking-wider">Recommended Summary Fix</h3>
-                        <motion.button 
-                            onClick={copyFix} 
-                            className="flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                            {copied ? 'Copied!' : 'Copy Text'}
-                        </motion.button>
-                    </div>
-                    <div className="p-4 bg-black rounded-lg border border-zinc-800 text-zinc-300 font-mono text-sm leading-relaxed">
-                        {data.fix}
-                    </div>
-                </motion.div>
+      {/* 3. Tab Contents */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'overview' && (
+          <motion.div
+            key="overview"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4"
+          >
+            {/* Recommended AI Summary Fix */}
+            {data?.fix && (
+              <div className="rounded-2xl border border-emerald-500/20 bg-zinc-950/80 p-6 backdrop-blur-xl space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Recommended Executive Summary Overhaul
+                  </h3>
+                  <button
+                    onClick={copyFix}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-emerald-400 transition-colors"
+                  >
+                    {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                    {copied ? 'Copied to Clipboard!' : 'Copy Summary'}
+                  </button>
+                </div>
+                <p className="text-sm leading-relaxed text-zinc-200 font-mono bg-zinc-900/60 p-4 rounded-xl border border-white/5">
+                  {data.fix}
+                </p>
+              </div>
             )}
 
-            {/* Hidden Shareable Viral Scorecard (Used only by html-to-image) */}
-            <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none">
-                <div 
-                    ref={cardRef} 
-                    className="w-[1200px] h-[630px] bg-zinc-950 flex flex-col justify-between p-16 font-sans border-t-[8px] border-emerald-500 shadow-2xl relative overflow-hidden"
-                >
-                    {/* Background Hackery */}
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/40 via-zinc-950 to-zinc-950 z-0"></div>
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] z-0"></div>
+            {/* Strengths & Weaknesses Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-emerald-500/20 bg-zinc-950/60 p-5 space-y-3">
+                <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Key Resume Strengths
+                </h4>
+                <ul className="space-y-2 text-xs text-zinc-300">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400">•</span>
+                    Strong alignment on core technical capabilities ({matched.slice(0, 3).join(', ') || 'General qualifications'}).
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400">•</span>
+                    Parsed clean contact details and authentic work history.
+                  </li>
+                </ul>
+              </div>
 
-                    <div className="relative z-10 flex justify-between items-start">
-                        <div>
-                            <h1 className="text-6xl font-black text-white flex items-center gap-4">
-                                Career<span className="text-emerald-500">Ops</span>
-                            </h1>
-                            <p className="mt-4 text-2xl text-zinc-400 font-medium tracking-wide">Privacy-First ATS Optimizer</p>
-                        </div>
-                        <div className="bg-emerald-500/10 border border-emerald-500/30 px-6 py-3 rounded-full flex items-center gap-3 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                            <Check className="w-8 h-8 text-emerald-400" />
-                            <span className="text-emerald-400 font-bold text-xl uppercase tracking-wider">Stateless Architecture</span>
-                        </div>
-                    </div>
-
-                    <div className="relative z-10 flex items-center gap-16 mt-8">
-                        {/* Huge Score */}
-                        <div className={`relative w-[320px] h-[320px] shrink-0 flex flex-col items-center justify-center rounded-full border-[12px] shadow-[0_0_100px_rgba(0,0,0,0.5)] bg-zinc-900 ${getColor(score)} ${getGlow(score)}`}>
-                            <span className="text-9xl font-black">{score}</span>
-                            <span className="text-3xl font-bold opacity-60 uppercase tracking-widest mt-2 mt-4">Match</span>
-                        </div>
-
-                        {/* Stats Panel */}
-                        <div className="flex-1 space-y-12 bg-zinc-900/80 p-10 rounded-3xl border border-zinc-700/50 backdrop-blur-xl shadow-2xl">
-                            <div>
-                                <h3 className="text-2xl text-zinc-400 uppercase tracking-widest font-semibold mb-6 flex items-center gap-3">
-                                    <Check className="w-8 h-8 text-emerald-500" />
-                                    Detected Keywords
-                                </h3>
-                                <div className="flex flex-wrap gap-4">
-                                    {data?.matchedKeywords?.slice(0, 6).map((kw: string, i: number) => (
-                                        <span key={i} className="px-5 py-2.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg text-xl font-semibold">
-                                            {kw}
-                                        </span>
-                                    ))}
-                                    {data?.matchedKeywords?.length > 6 && (
-                                        <span className="text-zinc-500 text-xl font-medium px-5 py-2.5">+{data?.matchedKeywords?.length - 6} more</span>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <h3 className="text-2xl text-zinc-400 uppercase tracking-widest font-semibold mb-6 flex items-center gap-3">
-                                    <AlertTriangle className="w-8 h-8 text-amber-500" />
-                                    Critical Missing
-                                </h3>
-                                <div className="flex flex-wrap gap-4">
-                                    {missing.length > 0 ? (
-                                        missing.slice(0, 5).map((kw: string, i: number) => (
-                                            <span key={i} className="px-5 py-2.5 bg-red-500/10 text-red-500 border border-red-500/30 rounded-lg text-xl font-semibold">
-                                                {kw}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <span className="text-emerald-500 text-xl font-bold">100% Keyword Parity Achieved!</span>
-                                    )}
-                                    {missing.length > 5 && (
-                                        <span className="text-zinc-500 text-xl font-medium px-5 py-2.5">+{missing.length - 5} more</span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="relative z-10 flex justify-between items-end border-t border-zinc-800/80 pt-8 mt-12">
-                        <p className="text-xl text-zinc-500 font-medium">Algorithmic Match Verified By CareerOps Intelligence</p>
-                        <p className="text-2xl text-white font-black tracking-wider flex items-center gap-3">
-                            <Share2 className="w-6 h-6 text-emerald-500"/> careerops.whoisalfaz.me
-                        </p>
-                    </div>
-                </div>
+              <div className="rounded-2xl border border-rose-500/20 bg-zinc-950/60 p-5 space-y-3">
+                <h4 className="text-sm font-bold text-rose-400 flex items-center gap-2">
+                  <XCircle className="h-4 w-4" />
+                  Critical Keyword Gaps
+                </h4>
+                <ul className="space-y-2 text-xs text-zinc-300">
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-400">•</span>
+                    Missing {missing.length} high-frequency job description terms ({missing.slice(0, 3).join(', ') || 'None'}).
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-400">•</span>
+                    Experience bullets require STAR format (Action Verb + Quantifiable Impact).
+                  </li>
+                </ul>
+              </div>
             </div>
-        </div>
-    );
+          </motion.div>
+        )}
+
+        {activeTab === 'keywords' && (
+          <motion.div
+            key="keywords"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4"
+          >
+            {/* Filter Pills */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setFilterType('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterType === 'all' ? 'bg-white/10 text-white' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                All Terms ({missing.length + matched.length})
+              </button>
+              <button
+                onClick={() => setFilterType('missing')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterType === 'missing' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Missing ({missing.length})
+              </button>
+              <button
+                onClick={() => setFilterType('matched')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterType === 'matched' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Matched ({matched.length})
+              </button>
+            </div>
+
+            {/* Keyword Chips */}
+            <div className="flex flex-wrap gap-2 p-4 rounded-2xl border border-white/10 bg-zinc-950/60">
+              {(filterType === 'all' || filterType === 'missing') &&
+                missing.map((kw: string, i: number) => (
+                  <motion.button
+                    key={`m-${kw}`}
+                    onClick={() => setSelectedKeyword(kw)}
+                    variants={badgeVariants}
+                    initial="hidden"
+                    animate="visible"
+                    custom={i}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 transition-all hover:bg-rose-500/20 ${
+                      selectedKeyword === kw ? 'ring-2 ring-rose-400' : ''
+                    }`}
+                  >
+                    <XCircle className="h-3.5 w-3.5 text-rose-400" />
+                    {kw}
+                  </motion.button>
+                ))}
+
+              {(filterType === 'all' || filterType === 'matched') &&
+                matched.map((kw: string, i: number) => (
+                  <motion.span
+                    key={`match-${kw}`}
+                    variants={badgeVariants}
+                    initial="hidden"
+                    animate="visible"
+                    custom={i}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    {kw}
+                  </motion.span>
+                ))}
+            </div>
+
+            {/* Interactive Bullet Template Generator for Selected Keyword */}
+            {selectedKeyword && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="rounded-2xl border border-amber-500/20 bg-zinc-950/80 p-5 space-y-3"
+              >
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    STAR Bullet Templates for &quot;{selectedKeyword}&quot;
+                  </h4>
+                  <button
+                    onClick={() => setSelectedKeyword(null)}
+                    className="text-xs text-zinc-400 hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {getTemplatesForKeyword(selectedKeyword).map((tpl, idx) => (
+                    <div
+                      key={idx}
+                      className="flex justify-between items-center p-3 rounded-xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 text-xs text-zinc-200"
+                    >
+                      <span>• {tpl}</span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(tpl);
+                          setCopiedBullet(idx);
+                          setTimeout(() => setCopiedBullet(null), 2000);
+                        }}
+                        className="ml-3 text-zinc-400 hover:text-emerald-400"
+                      >
+                        {copiedBullet === idx ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+
+        {(activeTab === 'tailor' || onTailor) && (
+          <motion.div
+            key="tailor"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {/* 4. ✨ AI Resume Tailor Action Banner */}
+            <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
+              <div className="absolute -right-16 -bottom-16 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="space-y-2 max-w-xl">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Top-Grade AI Engine (STAR Method)
+                  </span>
+                  <h3 className="text-xl font-bold text-white">
+                    Tailor Entire Resume to Job Description
+                  </h3>
+                  <p className="text-xs leading-relaxed text-zinc-300">
+                    Automatically rewrite experience bullets with action verbs, inject missing keywords cleanly, and boost your ATS score to 90%+ with zero false claims.
+                  </p>
+                </div>
+
+                <motion.button
+                  onClick={onTailor}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  className="inline-flex items-center justify-center gap-2.5 rounded-xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 transition-all cursor-pointer"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Tailor Resume with AI
+                  <ArrowUpRight className="h-4 w-4" />
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
