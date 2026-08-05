@@ -4,8 +4,8 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: ['/', '/build', '/optimize', '/templates'],
-      disallow: '/private/',
+      allow: '/',
+      disallow: ['/api/'],
     },
     sitemap: 'https://careerops.whoisalfaz.me/sitemap.xml',
   };

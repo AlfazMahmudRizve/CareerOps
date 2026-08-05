@@ -20,17 +20,33 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: post.meta.title,
     description: post.meta.description,
     authors: [{ name: post.meta.author }],
+    alternates: {
+      canonical: `https://careerops.whoisalfaz.me/blog/${params.slug}`,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
     openGraph: {
       title: post.meta.title,
       description: post.meta.description,
       type: 'article',
       publishedTime: post.meta.publishDate,
       authors: [post.meta.author],
+      images: ['/logo.png'],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.meta.title,
       description: post.meta.description,
+      images: ['/logo.png'],
     },
   };
 }
@@ -107,7 +123,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <h3 className="text-2xl font-bold text-white mb-4">Want to check your resume privately?</h3>
             <p className="text-zinc-400 mb-6">CareerOps analyzes your resume entirely in your browser. We never see your data, we never store it, and we definitely don&apos;t sell it.</p>
             <Link 
-                href="/build" 
+                href="/optimize" 
                 className="inline-block bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold px-8 py-4 rounded-full transition-colors"
             >
                 Start Free Analysis

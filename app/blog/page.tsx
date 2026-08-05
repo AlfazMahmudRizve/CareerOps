@@ -4,8 +4,36 @@ import { Metadata } from 'next';
 import { ChevronRight } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Engineering & Privacy Blog — CareerOps',
+  title: 'ATS Resume Optimization & Privacy Engineering Blog — CareerOps',
   description: 'Deep dives on Applicant Tracking Systems, privacy-first software architecture, and the engineering behind resume optimization.',
+  alternates: {
+    canonical: 'https://careerops.whoisalfaz.me/blog',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    title: 'ATS Resume Optimization & Privacy Engineering Blog — CareerOps',
+    description: 'Deep dives on Applicant Tracking Systems, privacy-first software architecture, and the engineering behind resume optimization.',
+    url: 'https://careerops.whoisalfaz.me/blog',
+    siteName: 'CareerOps Blog',
+    images: ['/logo.png'],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ATS Resume Optimization & Privacy Engineering Blog — CareerOps',
+    description: 'Deep dives on Applicant Tracking Systems, privacy-first software architecture, and the engineering behind resume optimization.',
+    images: ['/logo.png'],
+  },
 };
 
 export default function BlogIndex() {
@@ -14,8 +42,12 @@ export default function BlogIndex() {
   return (
     <div className="max-w-4xl mx-auto py-20 px-6">
       <div className="mb-16">
-        <h1 className="text-5xl font-black text-white tracking-tight mb-4">Engineering & Privacy <span className="text-emerald-500">Log</span></h1>
-        <p className="text-xl text-zinc-400">Technical deep dives from the builder of CareerOps.</p>
+        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+          ATS Optimization &amp; Privacy <span className="text-emerald-500">Log</span>
+        </h1>
+        <p className="text-lg md:text-xl text-zinc-400">
+          Technical deep dives from the builder of CareerOps.
+        </p>
       </div>
 
       <div className="space-y-12">
