@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import pdfParse from 'pdf-parse';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
 /**
- * Safely load @firecrawl/pdf-inspector without triggering Next.js Webpack binary loader errors.
+ * Safely load @firecrawl/pdf-inspector without Webpack binary build errors.
  */
 function getPdfInspector() {
   try {
     // eslint-disable-next-line no-eval
     const req = eval('require');
     return req('@firecrawl/pdf-inspector');
-  } catch (err) {
-    console.warn('[parse-pdf] Failed to require @firecrawl/pdf-inspector:', err);
+  } catch {
     return null;
   }
 }
@@ -66,32 +66,30 @@ export async function POST(req: NextRequest) {
 
     let extractedText = '';
 
-    // 1. Primary Strategy: Rust-powered @firecrawl/pdf-inspector (<2ms execution)
-    const pdfInspector = getPdfInspector();
-    if (pdfInspector) {
-      try {
-        const inspectRes = pdfInspector.processPdf(buffer);
-        if (inspectRes && inspectRes.markdown && inspectRes.markdown.trim().length >= 10) {
-          extractedText = inspectRes.markdown.trim();
-        } else if (typeof pdfInspector.extractText === 'function') {
-          extractedText = pdfInspector.extractText(buffer).trim();
-        }
-      } catch (err) {
-        console.warn('[parse-pdf] @firecrawl/pdf-inspector execution failed:', err);
+    // 1. Primary Strategy: Guaranteed pdf-parse parser (bundled by Webpack for Vercel Serverless)
+    try {
+      const data = await pdfParse(buffer);
+      if (data && data.text && data.text.trim().length >= 15) {
+        extractedText = data.text.trim();
       }
+    } catch (err) {
+      console.warn('[parse-pdf] pdf-parse call failed:', err);
     }
 
-    // 2. Secondary Strategy: pdf-parse fallback
+    // 2. Secondary Strategy: Rust-powered @firecrawl/pdf-inspector if loaded
     if (!extractedText || extractedText.length < 15) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, no-eval
-        const pdfParse = eval('require')('pdf-parse');
-        const data = await pdfParse(buffer);
-        if (data && data.text && data.text.trim().length >= 15) {
-          extractedText = data.text.trim();
+      const pdfInspector = getPdfInspector();
+      if (pdfInspector) {
+        try {
+          const inspectRes = pdfInspector.processPdf(buffer);
+          if (inspectRes && inspectRes.markdown && inspectRes.markdown.trim().length >= 10) {
+            extractedText = inspectRes.markdown.trim();
+          } else if (typeof pdfInspector.extractText === 'function') {
+            extractedText = pdfInspector.extractText(buffer).trim();
+          }
+        } catch (err) {
+          console.warn('[parse-pdf] @firecrawl/pdf-inspector execution failed:', err);
         }
-      } catch (err) {
-        console.warn('[parse-pdf] pdf-parse fallback failed:', err);
       }
     }
 
