@@ -3,7 +3,7 @@ import { getPosts } from '@/lib/mdx';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://careerops.whoisalfaz.me';
-  
+
   // Base Core Routes
   const routes: MetadataRoute.Sitemap = [
     {
@@ -29,6 +29,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
+    },
+    // pSEO Landing Pages
+    {
+      url: `${baseUrl}/vs/jobscan-alternative`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/ats/workday-resume-scanner`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.95,
     },
   ];
 
