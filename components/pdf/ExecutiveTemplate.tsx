@@ -310,10 +310,6 @@ export const ExecutiveTemplate = ({ data }: { data: ResumeData }) => {
                     </View>
                 )}
 
-                {/* Viral Embedded Footer */}
-                <Text style={{ position: 'absolute', bottom: 15, left: 0, right: 0, textAlign: 'center', fontSize: 8, color: '#888888', fontStyle: 'italic' }}>
-                    Optimized to beat the algorithm by CareerOps.com
-                </Text>
             </Page>
         </Document>
     );

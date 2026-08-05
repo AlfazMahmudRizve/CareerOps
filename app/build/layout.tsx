@@ -2,9 +2,14 @@ import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Resume Builder | CareerOps',
-  description: 'Optmize your resume with AI and ATS-friendly templates.',
+  description: 'Optimize your resume with AI and ATS-friendly templates.',
   alternates: {
     canonical: 'https://careerops.whoisalfaz.me/build',
+  },
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
   },
 };
 
